@@ -1,0 +1,22 @@
+<svg
+  viewBox="8 24 112 84"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="
+      M16 24
+      H48
+      L60 36
+      H112
+      Q120 36 120 44
+      V100
+      Q120 108 112 108
+      H16
+      Q8 108 8 100
+      V32
+      Q8 24 16 24
+      Z
+    "
+    fill="currentColor"
+  />
+</svg>

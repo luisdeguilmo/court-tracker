@@ -23,6 +23,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Event::listen(SocialiteWasCalled::class, MicrosoftExtendSocialite::class);
-        Event::listen(SocialiteWasCalled::class, MicrosoftAzureExtendSocialite::class);
+        // Event::listen(SocialiteWasCalled::class, MicrosoftAzureExtendSocialite::class);
     }
 }

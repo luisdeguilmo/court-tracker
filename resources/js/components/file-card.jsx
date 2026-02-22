@@ -10,27 +10,36 @@ import {
     FileArchive,
     File,
 } from "lucide-react";
+import PDFIcon from "../assets/icons/pdf.png";
+import ZipIcon from "../assets/icons/zip.png";
+import TXTIcon from "../assets/icons/txt.png";
+import XLSIcon from "../assets/icons/xls.png";
+import PPTXIcon from "../assets/icons/pptx-file.png";
+import IMGIcon from "../assets/icons/image.png";
+import VideoIcon from "../assets/icons/video.png";
+import FolderIcon from "../assets/icons/folder.svg?react";
+import FileIcon from "./ui/file-icon";
 
 const FileCard = ({ fileName, fileType, fileSize, isFolder = false }) => {
     const renderFileIcon = () => {
         if (isFolder) {
-            return <Folder className="w-12 h-12 text-yellow-500" />;
+            return <FolderIcon className="w-8 h-8 text-gray-500" />;
         }
 
         if (!fileType) {
-            return <File className="w-12 h-12 text-gray-400" />;
+            return <File className="w-8 h-8 text-gray-400" />;
         }
 
         if (fileType.startsWith("image/")) {
-            return <FileImage className="w-12 h-12 text-purple-500" />;
+            return <FileIcon icon={IMGIcon} />;
         }
 
         if (fileType === "application/pdf") {
-            return <FileText className="w-12 h-12 text-red-500" />;
+            return <FileIcon icon={PDFIcon} />;
         }
 
         if (fileType.startsWith("video/")) {
-            return <FileVideo className="w-12 h-12 text-blue-500" />;
+            return <FileIcon icon={VideoIcon} />;
         }
 
         if (fileType.startsWith("audio/")) {
@@ -38,18 +47,22 @@ const FileCard = ({ fileName, fileType, fileSize, isFolder = false }) => {
         }
 
         if (fileType.includes("spreadsheet") || fileType.includes("excel")) {
-            return <FileSpreadsheet className="w-12 h-12 text-emerald-600" />;
+            return <FileIcon icon={XLSIcon} />;
         }
 
         if (fileType.includes("zip") || fileType.includes("compressed")) {
-            return <FileArchive className="w-12 h-12 text-orange-500" />;
+            return <FileIcon icon={ZipIcon} />;
         }
 
-        return <File className="w-12 h-12 text-gray-400" />;
+        if (fileType.includes("text")) {
+            return <FileIcon icon={TXTIcon} />;
+        }
+
+        return <File className="w-6 h-6 text-gray-400" />;
     };
 
     return (
-        <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border">
+        <div className="flex items-center justify-between px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border">
             <div className="flex items-center gap-4">
                 {renderFileIcon()}
                 <div>
@@ -60,7 +73,7 @@ const FileCard = ({ fileName, fileType, fileSize, isFolder = false }) => {
                         {fileName}
                     </p>
                     {!isFolder && (
-                        <p className="text-gray-500 text-sm">{fileSize}</p>
+                        <p className="text-gray-500 text-xs">{fileSize}</p>
                     )}
                 </div>
             </div>

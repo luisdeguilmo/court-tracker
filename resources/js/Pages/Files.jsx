@@ -1,4 +1,5 @@
 import FileCard from "@/components/file-card";
+import Toolbar from "@/components/toolbar";
 import MainLayout from "@/Layouts/MainLayout";
 
 const Files = () => {
@@ -9,12 +10,6 @@ const Files = () => {
             fileSize: "1.2 MB",
         },
         {
-            fileName: "ProjectProposal.pdf",
-            fileType: "application/pdf",
-            fileSize: "1.2 MB",
-            isFolder: true
-        },
-        {
             fileName: "TeamPhoto.jpg",
             fileType: "image/jpeg",
             fileSize: "3.4 MB",
@@ -23,6 +18,12 @@ const Files = () => {
             fileName: "MeetingRecording.mp4",
             fileType: "video/mp4",
             fileSize: "25 MB",
+        },
+        {
+            fileName: "ProjectProposal.pdf",
+            fileType: "application/pdf",
+            fileSize: "1.2 MB",
+            isFolder: true
         },
         {
             fileName: "Budget.xlsx",
@@ -50,11 +51,12 @@ const Files = () => {
 
     return (
         <>
-            <h1>Files</h1>
+            <Toolbar />
 
-            <div className="w-full grid grid-cols-3 gap-4">
-                {sampleFiles.map((file) => (
+            <div className="w-full grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {sampleFiles.map((file, index) => (
                     <FileCard
+                        key={index}
                         fileName={file.fileName}
                         fileSize={file.fileSize}
                         fileType={file.fileType}

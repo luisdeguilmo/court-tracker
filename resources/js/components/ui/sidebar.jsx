@@ -129,6 +129,7 @@ function SidebarProvider({
                     style={{
                         "--sidebar-width": SIDEBAR_WIDTH,
                         "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+                        "--sidebar-width-collapsed": "4rem", // new added
                         ...style,
                     }}
                     className={cn(
@@ -214,7 +215,8 @@ function Sidebar({
                     "group-data-[side=right]:rotate-180",
                     variant === "floating" || variant === "inset"
                         ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-                        : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
+                        // : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
+                        : "group-data-[collapsible=icon]:w-(--sidebar-width-collapsed)", // new added
                 )}
             />
             <div
@@ -227,7 +229,8 @@ function Sidebar({
                     // Adjust the padding for floating and inset variants.
                     variant === "floating" || variant === "inset"
                         ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-                        : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+                        // : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+                        : "group-data-[collapsible=icon]:w-(--sidebar-width-collapsed) group-data-[side=left]:border-r group-data-[side=right]:border-l", // new added
                     className,
                 )}
                 {...props}
@@ -356,6 +359,7 @@ function SidebarContent({ className, ...props }) {
             data-sidebar="content"
             className={cn(
                 "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+                "group-data-[state=collapsed]:px-0",
                 className,
             )}
             {...props}
@@ -489,6 +493,7 @@ function SidebarMenuButton({
             data-active={isActive}
             className={cn(
                 sidebarMenuButtonVariants({ variant, size }),
+                state === "collapsed" && !isMobile && "mx-auto px-0",
                 className,
             )}
             {...props}

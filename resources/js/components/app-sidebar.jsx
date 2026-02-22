@@ -34,7 +34,7 @@ const menu_items = [
 
 const AppSideBar = () => {
     return (
-        <Sidebar>
+        <Sidebar variant="sidebar" collapsible="icon">
             <SidebarHeader className="text-lg font-semibold px-4 py-2">
                 RTC 1
             </SidebarHeader>
@@ -43,13 +43,13 @@ const AppSideBar = () => {
                 <SidebarMenu>
                     {menu_items.map((item) => (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton asChild>
+                            <SidebarMenuButton className={'px-6'} asChild>
                                 <a
                                     href={item.url}
                                     className="flex items-center gap-2"
                                 >
                                     <item.icon className="w-4 h-4" />
-                                    <span>{item.title}</span>
+                                    <span className="text-gray-900">{item.title}</span>
                                 </a>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
