@@ -60,6 +60,13 @@ return [
             'report' => false,
         ],
 
+            'onedrive' => [
+            'driver' => 'onedrive',
+            'clientId' => env('ONEDRIVE_CLIENT_ID'),
+            'clientSecret' => env('ONEDRIVE_CLIENT_SECRET'),
+            'tenantId' => env('ONEDRIVE_TENANT_ID'),
+        ],
+
     ],
 
     /*
