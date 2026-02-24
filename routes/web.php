@@ -1,9 +1,7 @@
 <?php
 
 use App\Services\OneDriveAppTokenService;
-use App\Services\OneDriveService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,21 +30,42 @@ function generateCodeChallenge(string $verifier): string {
     return rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
 }
 
-// ─── OneDrive OAuth (User Login) ──────────────────────────────────────────────
+// ─── OneDrive OAuth ───────────────────────────────────────────────────────────
+
+// Route::get('/login', function () {
+//     $verifier  = generateCodeVerifier();
+//     $challenge = generateCodeChallenge($verifier);
+
+//     session(['pkce_verifier' => $verifier]);
+
+//     $query = http_build_query([
+//         'client_id'             => env('ONEDRIVE_CLIENT_ID'),
+//         'response_type'         => 'code',
+//         'redirect_uri'          => env('ONEDRIVE_REDIRECT_URI'),
+//         'response_mode'         => 'query',
+//         'scope'                 => 'offline_access Files.Read Files.ReadWrite',
+//         'code_challenge'        => $challenge,
+//         'code_challenge_method' => 'S256',
+//     ]);
+
+//     return redirect("https://login.microsoftonline.com/" . env('ONEDRIVE_TENANT_ID') . "/oauth2/v2.0/authorize?$query");
+// });
 
 Route::get('/login', function () {
-    $verifier = generateCodeVerifier();
-    session(['pkce_verifier' => $verifier]);
+    $verifier  = generateCodeVerifier();
     $challenge = generateCodeChallenge($verifier);
+
+    session(['pkce_verifier' => $verifier]);
 
     $query = http_build_query([
         'client_id'             => env('ONEDRIVE_CLIENT_ID'),
         'response_type'         => 'code',
         'redirect_uri'          => env('ONEDRIVE_REDIRECT_URI'),
         'response_mode'         => 'query',
-        'scope'                 => 'offline_access Files.ReadWrite',
+        'scope'                 => 'offline_access Files.Read Files.ReadWrite',
         'code_challenge'        => $challenge,
         'code_challenge_method' => 'S256',
+        'prompt'                => 'select_account', // ← add this
     ]);
 
     return redirect("https://login.microsoftonline.com/" . env('ONEDRIVE_TENANT_ID') . "/oauth2/v2.0/authorize?$query");
@@ -57,10 +76,11 @@ Route::get('/callback', function (Request $request) {
     $verifier = session('pkce_verifier');
 
     $response = Http::asForm()
-        ->withoutVerifying() // remove in production
+        ->withoutVerifying()
         ->post("https://login.microsoftonline.com/" . env('ONEDRIVE_TENANT_ID') . "/oauth2/v2.0/token", [
             'client_id'     => env('ONEDRIVE_CLIENT_ID'),
-            'scope'         => 'offline_access Files.ReadWrite',
+            'client_secret' => env('ONEDRIVE_CLIENT_SECRET'), // ← add this
+            'scope'         => 'offline_access Files.Read Files.ReadWrite',
             'code'          => $code,
             'redirect_uri'  => env('ONEDRIVE_REDIRECT_URI'),
             'grant_type'    => 'authorization_code',
@@ -68,115 +88,55 @@ Route::get('/callback', function (Request $request) {
         ]);
 
     $tokens = $response->json();
+
+    if (!isset($tokens['access_token'])) {
+        return response()->json(['error' => 'Token exchange failed', 'details' => $tokens], 500);
+    }
+
     session(['access_token' => $tokens['access_token']]);
 
-    return 'Logged in successfully!';
+    return redirect('/files');
 });
 
-Route::get('/data', function () {
-    $accessToken = session('access_token');
+// ─── Files Pages ──────────────────────────────────────────────────────────────
 
-    if (!$accessToken) {
-        return redirect('/login');
-    }
-
-    $service = new OneDriveService($accessToken);
-    $items   = $service->listRootItems();
-
-    $result = [];
-    foreach ($items as $item) {
-        $result[] = [
-            'name' => $item->getName(),
-            'type' => $item->getFolder() ? 'folder' : 'file',
-            'id'   => $item->getId(),
-        ];
-    }
-
-    return response()->json($result);
-});
-
-// ─── OneDrive Files (No Auth Required) ───────────────────────────────────────
-
-Route::get('/files', function (OneDriveAppTokenService $tokenService) {
-    // $token = $tokenService->getToken();
-
-    // if (!$token) {
-    //     return response()->json(['error' => 'Could not retrieve app token'], 500);
-    // }
-
-    // Bypass cache temporarily to see real error
-    Cache::forget('onedrive_app_token');
-    
-    $token = $tokenService->getToken();
+Route::get('/files', function () {
+    $token = session('access_token');
 
     if (!$token) {
-        // Check logs for details
-        return response()->json([
-            'error'   => 'Could not retrieve app token',
-            'check'   => 'See storage/logs/laravel.log for details',
-            'env_check' => [
-                'tenant_id'    => env('ONEDRIVE_TENANT_ID') ? 'SET' : 'MISSING',
-                'client_id'    => env('ONEDRIVE_CLIENT_ID') ? 'SET' : 'MISSING',
-                'client_secret'=> env('ONEDRIVE_CLIENT_SECRET') ? 'SET' : 'MISSING',
-                'user_id'      => env('ONEDRIVE_USER_ID') ? 'SET' : 'MISSING',
-            ]
-        ], 500);
+        return Inertia::render('Files', ['requiresAuth' => true]);
     }
 
-    $userId = env('ONEDRIVE_USER_ID');
+    return Inertia::render('Files', ['requiresAuth' => false]);
+});
+
+Route::get('/api/files', function () {
+    $token = session('access_token');
+
+    if (!$token) {
+        return response()->json(['error' => 'Unauthenticated'], 401);
+    }
+
+    $folderId = request()->query('folder');
+
+    $url = $folderId
+        ? "https://graph.microsoft.com/v1.0/me/drive/items/{$folderId}/children"
+        : "https://graph.microsoft.com/v1.0/me/drive/root/children";
 
     $response = Http::withToken($token)
-        ->withoutVerifying() // remove in production
-        ->get("https://graph.microsoft.com/v1.0/users/{$userId}/drive/root/children");
+        ->withoutVerifying()
+        ->get($url);
 
     if ($response->failed()) {
         return response()->json(['error' => 'Failed to fetch files', 'details' => $response->json()], 500);
     }
 
-    $items = $response->json()['value'];
-
-    $result = collect($items)->map(fn($item) => [
-        'id'   => $item['id'],
-        'name' => $item['name'],
-        'type' => isset($item['folder']) ? 'folder' : 'file',
-        'size' => $item['size'] ?? 0,
-        'url'  => $item['webUrl'] ?? null,
-    ]);
-
-    return response()->json($result);
+    return response()->json($response->json()['value']);
 });
 
-Route::get('/files/{folderId}', function (string $folderId, OneDriveAppTokenService $tokenService) {
-    $token  = $tokenService->getToken();
-    $userId = env('ONEDRIVE_USER_ID');
 
-    $response = Http::withToken($token)
-        ->withoutVerifying() // remove in production
-        ->get("https://graph.microsoft.com/v1.0/users/{$userId}/drive/items/{$folderId}/children");
+// Also go to your **Azure Portal → App Registration → Authentication** and make sure the redirect URI is set to exactly:
 
-    if ($response->failed()) {
-        return response()->json(['error' => 'Failed to fetch folder contents', 'details' => $response->json()], 500);
-    }
+http://localhost:8000/callback
 
-    $items = $response->json()['value'];
-
-    $result = collect($items)->map(fn($item) => [
-        'id'   => $item['id'],
-        'name' => $item['name'],
-        'type' => isset($item['folder']) ? 'folder' : 'file',
-        'size' => $item['size'] ?? 0,
-        'url'  => $item['webUrl'] ?? null,
-    ]);
-
-    return response()->json($result);
-});
-
-Route::get('/debug-users', function (OneDriveAppTokenService $tokenService) {
-    $token = $tokenService->getToken();
-
-    $response = Http::withToken($token)
-        ->withoutVerifying()
-        ->get("https://graph.microsoft.com/v1.0/users?\$select=id,displayName,mail,assignedLicenses");
-
-    return response()->json($response->json());
-});
+// so the folders and files that will be displayed in the app will be from the OneDrive account of the user whose credentials I used to log in? or from OneDrive account associated with the app registration?
