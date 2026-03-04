@@ -34,10 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    'azure' => [
-    'client_id' => env('ONEDRIVE_CLIENT_ID'),
-    'client_secret' => env('ONEDRIVE_CLIENT_SECRET'),
-    'redirect' => env('ONEDRIVE_REDIRECT_URI'),
+    'box' => [
+    'client_id'     => env('BOX_CLIENT_ID'),
+    'client_secret' => env('BOX_CLIENT_SECRET'),
+    'redirect_uri'  => env('BOX_REDIRECT_URI'),
+    'access_token'  => env('BOX_ACCESS_TOKEN'),
+
 ],
 
 ];
