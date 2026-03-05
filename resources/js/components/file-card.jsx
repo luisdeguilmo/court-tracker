@@ -14,7 +14,7 @@ import PDFIcon from "../assets/icons/pdf.png";
 import ZipIcon from "../assets/icons/zip.png";
 import TXTIcon from "../assets/icons/txt.png";
 import XLSIcon from "../assets/icons/xls.png";
-import PPTXIcon from "../assets/icons/pptx-file.png";
+// import PPTXIcon from "../assets/icons/pptx-file.png";
 import IMGIcon from "../assets/icons/image.png";
 import VideoIcon from "../assets/icons/video.png";
 import FolderIcon from "../assets/icons/folder.svg?react";
