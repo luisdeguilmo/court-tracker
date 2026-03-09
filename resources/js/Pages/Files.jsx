@@ -69,7 +69,7 @@ export default function Files(){
     );
 };
 
-Files.layout = (page) => <AuthenticatedLayout>{page}</AuthenticatedLayout>;
+Files.layout = (page) => <MainLayout>{page}</MainLayout>;
 
 // export default Files;
 

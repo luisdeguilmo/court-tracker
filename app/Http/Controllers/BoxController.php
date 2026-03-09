@@ -83,6 +83,7 @@ class BoxController extends Controller
     //     return redirect($url);
     // }
 
+    // **V3**
     public function __construct(protected BoxService $box) {}
 
     public function redirect()
@@ -95,7 +96,7 @@ class BoxController extends Controller
         $tokens = $this->box->getAccessToken($request->get('code'));
 
         BoxToken::updateOrCreate(
-            ['user_id' => auth()->id()],
+            ['user_id' => Auth::id()],
             [
                 'access_token'  => $tokens['access_token'],
                 'refresh_token' => $tokens['refresh_token'],
@@ -109,7 +110,7 @@ class BoxController extends Controller
     public function files(Request $request)
     {
         // Redirect to Box login if user has no token yet
-        if (!BoxToken::where('user_id', auth()->id())->exists()) {
+        if (!BoxToken::where('user_id', Auth::id())->exists()) {
             return redirect()->route('box.connect');
         }
 

@@ -22,7 +22,7 @@ const menu_items = [
     },
     {
         title: "Files",
-        url: "/files",
+        url: "/box/files",
         icon: BookText,
     },
     {

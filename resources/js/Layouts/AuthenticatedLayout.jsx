@@ -8,6 +8,8 @@ import { useState } from 'react';
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
 
+    console.log(user);
+
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
 
@@ -31,8 +33,8 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    href={route('files')}
-                                    active={route().current('files')}
+                                    href={route('box.files')}
+                                    active={route().current('box.files')}
                                 >
                                     Files
                                 </NavLink>
