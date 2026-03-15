@@ -1,6 +1,7 @@
 import {
     BookText,
     ChevronsUpDown,
+    Folder,
     LayoutDashboard,
     Settings,
 } from "lucide-react";
@@ -19,6 +20,11 @@ const menu_items = [
         title: "Dashboard",
         url: "/dashboard",
         icon: LayoutDashboard,
+    },
+    {
+        title: "Folders",
+        url: "/folders",
+        icon: Folder,
     },
     {
         title: "Files",
@@ -43,13 +49,15 @@ const AppSideBar = () => {
                 <SidebarMenu>
                     {menu_items.map((item) => (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton className={'px-6'} asChild>
+                            <SidebarMenuButton className={"px-6"} asChild>
                                 <a
                                     href={item.url}
                                     className="flex items-center gap-2"
                                 >
                                     <item.icon className="w-4 h-4" />
-                                    <span className="text-gray-900">{item.title}</span>
+                                    <span className="text-gray-900">
+                                        {item.title}
+                                    </span>
                                 </a>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

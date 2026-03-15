@@ -52,9 +52,10 @@ export default function Index({ files, folderId }) {
                                     ) : (
                                         <>
                                             <button
-                                                onClick={() =>
-                                                    download(file.id)
-                                                }
+                                                onClick={() => {
+                                                    console.log(file.id);
+                                                    download(file.id);
+                                                }}
                                                 className="text-green-600 hover:underline"
                                             >
                                                 Download

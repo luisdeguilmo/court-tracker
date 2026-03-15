@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ── DB Folders + their Box-backed files ───────────────────────────────
     Route::get('/folders',         [FolderController::class, 'index'])->name('folders.index');
     Route::get('/folders/{folder}',[FolderController::class, 'show'])->name('folders.show');
+    Route::post('/folders', [FolderController::class, 'store'])->name('folders.store');
 });
 
 Route::middleware('auth')->group(function () {

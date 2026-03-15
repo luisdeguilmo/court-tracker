@@ -13,7 +13,7 @@ const Header = () => {
 
     return (
         <header className="relative ">
-            <nav className="fixed w-[50%] bg-white border-b px-4 py-2.5 flex justify-between items-center">
+            <nav className={`bg-white border-b px-4 py-2.5 flex justify-between items-center`}>
                 <SidebarTrigger />
                 <SearchBar />
 

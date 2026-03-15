@@ -1,3 +1,4 @@
+import MainLayout from "@/Layouts/MainLayout";
 import { Head, Link } from "@inertiajs/react";
 import {
     ArrowLeft,
@@ -159,7 +160,11 @@ export default function FoldersShow({ folder, files }) {
     );
 }
 
+FoldersShow.layout = (page) => <MainLayout>{page}</MainLayout>;
+
 function FileRow({ file }) {
+    const download = (id) => window.open(`/box/download/${id}`, "_blank");
+
     return (
         <tr className="hover:bg-gray-50 transition">
             {/* Name */}
@@ -229,12 +234,21 @@ function FileRow({ file }) {
                         <Lock size={13} /> Restricted
                     </span>
                 ) : file.download_url ? (
-                    <Link
-                        href={file.download_url}
-                        className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition font-medium"
+                    // <Link
+                    //     href={file.download_url}
+                    //     className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition font-medium"
+                    // >
+                    //     <Download size={15} /> Download
+                    // </Link>
+                    <button
+                        onClick={() => {
+                            console.log(file);
+                            download(file.box_file_id);
+                        }}
+                        className="text-green-600 hover:underline"
                     >
-                        <Download size={15} /> Download
-                    </Link>
+                        Download
+                    </button>
                 ) : (
                     <span className="text-xs text-gray-300">Unavailable</span>
                 )}

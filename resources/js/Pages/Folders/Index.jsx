@@ -7,7 +7,24 @@ import {
     FileText,
     ChevronRight,
     ChevronLeft,
+    Plus,
 } from "lucide-react";
+import MainLayout from "@/Layouts/MainLayout";
+import AppDropdown from "@/components/app-dropdown";
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuPortal,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const STATUS_PILL = {
     open: "bg-emerald-100 text-emerald-700",
@@ -35,7 +52,7 @@ export default function FoldersIndex({ folders, filters }) {
     return (
         <>
             <Head title="Folders" />
-            <div className="min-h-screen bg-gray-50">
+            <div className="relative min-h-screen bg-gray-50">
                 <div className="bg-white border-b border-gray-200 px-6 py-5">
                     <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
                         <div>
@@ -78,6 +95,15 @@ export default function FoldersIndex({ folders, filters }) {
                                 </button>
                             )}
                         </form>
+
+                        {/* <button
+                            type="button"
+                            className="px-4 py-2 flex items-center gap-3 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        >
+                            <Plus className="w-5 h-5" />
+                            New
+                            
+                        </button> */}
                     </div>
                 </div>
 
@@ -115,10 +141,16 @@ export default function FoldersIndex({ folders, filters }) {
                         <Pagination links={folders.links} meta={folders} />
                     )}
                 </div>
+
+                <span className="fixed bottom-20 right-20">
+                    <AppDropdown />
+                </span>
             </div>
         </>
     );
 }
+
+FoldersIndex.layout = (page) => <MainLayout>{page}</MainLayout>;
 
 function FolderCard({ folder }) {
     const pill =
@@ -128,11 +160,11 @@ function FolderCard({ folder }) {
     return (
         <Link
             href={route("folders.show", folder.id)}
-            className="group block bg-white rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200 overflow-hidden"
+            className="relative group block bg-white rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200 overflow-hidden"
         >
             <div className="p-5">
                 <div className="flex items-start justify-between gap-2">
-                    <div className="p-2.5 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition">
+                    {/* <div className="p-2.5 mb-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition">
                         <Folder size={22} className="text-blue-600" />
                     </div>
                     {folder.case_status && (
@@ -141,25 +173,25 @@ function FolderCard({ folder }) {
                         >
                             {folder.case_status}
                         </span>
-                    )}
+                    )} */}
                 </div>
 
-                <h3 className="mt-3 font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
-                    {folder.name}
+                <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
+                    {folder.folder_type.id === 1 ? folder.name : folder.case_title}
                 </h3>
                 {folder.case_number && (
-                    <p className="mt-1 text-xs text-gray-400 font-mono">
+                    <p className="mt-1 mb-8 text-xs text-gray-400 font-mono">
                         {folder.case_number}
                     </p>
                 )}
-                {folder.case_title && (
+                {/* {folder.case_title && (
                     <p className="mt-1 text-xs text-gray-500 line-clamp-1">
                         {folder.case_title}
                     </p>
-                )}
+                )} */}
             </div>
 
-            <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+            <div className="absolute w-full left-0 bottom-0 px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-1 text-xs text-gray-400">
                     <FileText size={13} />
                     <span>
@@ -167,13 +199,13 @@ function FolderCard({ folder }) {
                         {folder.files_count !== 1 ? "s" : ""}
                     </span>
                 </div>
-                <div className="flex items-center gap-1 text-xs text-gray-400">
+                {/* <div className="flex items-center gap-1 text-xs text-gray-400">
                     <span>{folder.folder_type?.name}</span>
                     <ChevronRight
                         size={14}
                         className="group-hover:text-blue-500 transition"
                     />
-                </div>
+                </div> */}
             </div>
         </Link>
     );

@@ -103,4 +103,21 @@ class BoxService
 
         return $response->header('Location');
     }
+
+    public function createFolder(string $name, string $parentId = '0'): string
+    {
+        $token = $this->getValidToken(); // your existing token-fetch logic
+
+        $response = Http::withoutVerifying()->withToken($token)
+            ->post('https://api.box.com/2.0/folders', [
+                'name'   => $name,
+                'parent' => ['id' => $parentId],
+            ]);
+
+        if ($response->failed()) {
+            throw new \Exception('Box folder creation failed: ' . $response->body());
+        }
+
+        return $response->json('id'); // ← This is the box_folder_id you store in DB
+    }
 }
