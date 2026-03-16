@@ -41,8 +41,8 @@ const menu_items = [
 const AppSideBar = () => {
     return (
         <Sidebar variant="sidebar" collapsible="icon">
-            <SidebarHeader className="text-lg font-semibold px-4 py-2">
-                RTC 1
+            <SidebarHeader className="text-lg text-center font-bold px-4 py-2">
+                Case Tracker
             </SidebarHeader>
 
             <SidebarContent>

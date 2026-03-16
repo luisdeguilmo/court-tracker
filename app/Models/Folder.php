@@ -13,7 +13,7 @@ class Folder extends Model
  
     protected $fillable = [
         'user_id', 'folder_type_id', 'name',
-        'case_number', 'case_title', 'case_status', 'box_folder_id',
+        'case_number', 'case_title', 'case_status', 'box_folder_id', 'parent_id'
     ];
  
     public function user(): BelongsTo
@@ -29,5 +29,15 @@ class Folder extends Model
     public function files(): HasMany
     {
         return $this->hasMany(File::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Folder::class, 'parent_id');
+    }
+
+    public function subfolders(): HasMany
+    {
+        return $this->hasMany(Folder::class, 'parent_id');
     }
 }

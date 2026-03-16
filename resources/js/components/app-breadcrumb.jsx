@@ -7,23 +7,41 @@ import {
     BreadcrumbSeparator,
 } from "./ui/breadcrumb";
 
-const AppBreadCrumb = () => {
+const AppBreadCrumb = ({ breadcrumbs, currentFolder, onNavigate }) => {
     return (
         <Breadcrumb>
-            <BreadcrumbList>
+            <BreadcrumbList className={'text-[15px]'}>
                 <BreadcrumbItem>
-                    <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                    <BreadcrumbLink href="/components">
-                        Components
+                    <BreadcrumbLink
+                        onClick={() => onNavigate(null)}
+                        style={{ cursor: "pointer" }}
+                    >
+                        Home
                     </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                    <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-                </BreadcrumbItem>
+
+                {breadcrumbs.map((crumb) => (
+                    <>
+                        <BreadcrumbSeparator key={`sep-${crumb.id}`} />
+                        <BreadcrumbItem key={crumb.id}>
+                            <BreadcrumbLink
+                                onClick={() => onNavigate(crumb)}
+                                style={{ cursor: "pointer" }}
+                            >
+                                {crumb.name}
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                    </>
+                ))}
+
+                {currentFolder && (
+                    <>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{currentFolder.name}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </>
+                )}
             </BreadcrumbList>
         </Breadcrumb>
     );

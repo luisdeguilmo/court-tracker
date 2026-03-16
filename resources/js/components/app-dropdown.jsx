@@ -17,7 +17,7 @@ import { useState } from "react";
 import { StandardFolderDialog } from "./standard-folder-dialog";
 import CaseFolderDialog from "./case-folder-dialog";
 
-export function AppDropdown() {
+export function AppDropdown({ parentId }) {
     const [isStandardFolderDialogOpen, setIsStandardFolderDialogOpen] =
         useState(false);
     const [isCaseFolderDialogOpen, setIsCaseFolderDialogOpen] = useState(false);
@@ -70,6 +70,7 @@ export function AppDropdown() {
             <StandardFolderDialog
                 open={isStandardFolderDialogOpen}
                 setIsOpen={setIsStandardFolderDialogOpen}
+                parentId={parentId}
             />
 
             <CaseFolderDialog

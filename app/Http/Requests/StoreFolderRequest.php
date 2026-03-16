@@ -23,10 +23,11 @@ class StoreFolderRequest extends FormRequest
     {
         return [
             'name'           => ['required', 'string', 'max:255'],
-            // 'case_number'    => ['nullable', 'string', 'max:100'],
-            // 'case_title'     => ['nullable', 'string', 'max:255'],
-            // 'case_status'    => ['nullable', 'string', 'max:100'],
+            'case_number'    => ['nullable', 'string', 'max:100'],
+            'case_title'     => ['nullable', 'string', 'max:255'],
+            'case_status'    => ['nullable', 'string', 'max:100'],
             'folder_type_id' => ['nullable', 'integer', 'exists:folder_types,id'],
+            'parent_id' => ['nullable', 'integer'],
             'box_parent_id'  => ['nullable', 'string'], // Box parent folder ID; defaults to root
         ];
     }

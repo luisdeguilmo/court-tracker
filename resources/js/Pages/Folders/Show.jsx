@@ -36,10 +36,13 @@ const STATUS_PILL = {
     pending: "bg-amber-100 text-amber-700",
 };
 
-export default function FoldersShow({ folder, files }) {
+export default function FoldersShow({ folder, subfolders, files }) {
     const pill =
         STATUS_PILL[folder.case_status?.toLowerCase()] ??
         "bg-gray-100 text-gray-500";
+
+    console.log(files);
+    console.log(subfolders);
 
     return (
         <>

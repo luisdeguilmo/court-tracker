@@ -14,21 +14,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { router, useForm } from "@inertiajs/react";
 
-export function StandardFolderDialog({ open, setIsOpen }) {
+export function StandardFolderDialog({ open, setIsOpen, parentId }) {
     const { data, setData, post, processing, errors } = useForm({
         name: "",
+        parent_id: parentId,
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        console.log("jsjdbjddf");
 
         post("/folders", {
             onSuccess: () => {
                 setIsOpen(false);
             },
         });
+
+        console.log(parentId);
     };
 
     return (
