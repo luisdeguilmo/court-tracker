@@ -297,6 +297,7 @@ import { Button } from "@/components/ui/button";
 import AppBreadCrumb from "@/components/app-breadcrumb";
 import Toolbar from "@/components/toolbar";
 import SwitchLayout from "@/components/switch-layout";
+import FileDetailsPanel from "@/components/details-panel";
 
 const STATUS_PILL = {
     open: "bg-emerald-100 text-emerald-700",
@@ -332,6 +333,8 @@ export default function FoldersIndex({
     filters,
 }) {
     const [search, setSearch] = useState(filters.search ?? "");
+    const [detailsOpen, setDetailsOpen] = useState(false);
+    const [selectedFolder, setSelectedFolder] = useState(false);
 
     // serverBreadcrumbs is an array of { id, name } built by the
     const isRoot = !currentFolder;
@@ -351,11 +354,12 @@ export default function FoldersIndex({
     }
 
     function handleFolderClick(folder) {
-        router.get(
-            route("folders.index"),
-            { folder_id: folder.id },
-            { preserveState: false },
-        );
+        setSelectedFolder(folder);
+        // router.get(
+        //     route("folders.index"),
+        //     { folder_id: folder.id },
+        //     { preserveState: false },
+        // );
     }
 
     function handleNavigate(crumb) {
@@ -374,7 +378,7 @@ export default function FoldersIndex({
     const displayFolders = isRoot ? (folders?.data ?? []) : (subfolders ?? []);
 
     return (
-        <>
+        <div className=""> 
             <Head title={currentFolder ? currentFolder.name : "Folders"} />
             <div className="relative min-h-screen">
                 {/* Title */}
@@ -442,119 +446,130 @@ export default function FoldersIndex({
                 </div>
 
                 {/* Body */}
-                <div className="max-w-7xl mx-auto py-8 space-y-8">
-                    {/* Subfolders grid */}
-                    {displayFolders.length > 0 && (
-                        <section>
-                            {!isRoot && (
-                                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                                    Folders
-                                </h2>
-                            )}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {displayFolders.map((folder) => (
-                                    <FolderCard
-                                        key={folder.id}
-                                        folder={folder}
-                                        onClick={() =>
-                                            handleFolderClick(folder)
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        </section>
-                    )}
+                <div className="flex">
+                    <div className={`max-w-7xl mx-auto py-8 space-y-8 overflow-y-scroll h-[450px] ${selectedFolder && "pr-4"}`}>
+                        {/* Subfolders grid */}
+                        {displayFolders.length > 0 && (
+                            <section>
+                                {!isRoot && (
+                                    <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                                        Folders
+                                    </h2>
+                                )}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    {displayFolders.map((folder) => (
+                                        <FolderCard
+                                            key={folder.id}
+                                            folder={folder}
+                                            onClick={() =>
+                                                handleFolderClick(folder)
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
-                    {/* Empty root */}
-                    {isRoot && displayFolders.length === 0 && (
-                        <div className="text-center py-24 text-gray-400">
-                            <FolderOpen
-                                size={48}
-                                className="mx-auto mb-3 opacity-30"
-                            />
-                            <p className="text-lg font-medium">
-                                No folders found
-                            </p>
-                            {filters.search && (
-                                <p className="text-sm mt-1">
-                                    Try a different term or{" "}
-                                    <button
-                                        onClick={handleClear}
-                                        className="text-blue-600 underline"
-                                    >
-                                        clear filters
-                                    </button>
+                        {/* Empty root */}
+                        {isRoot && displayFolders.length === 0 && (
+                            <div className="text-center py-24 text-gray-400">
+                                <FolderOpen
+                                    size={48}
+                                    className="mx-auto mb-3 opacity-30"
+                                />
+                                <p className="text-lg font-medium">
+                                    No folders found
                                 </p>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Files table — only inside a folder */}
-                    {!isRoot && (
-                        <section>
-                            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                                Files{" "}
-                                <span className="text-gray-400 font-normal normal-case">
-                                    ({files?.length ?? 0})
-                                </span>
-                            </h2>
-
-                            {files?.length === 0 ? (
-                                <div className="bg-white rounded-xl border border-gray-200 py-16 text-center text-gray-400">
-                                    <File
-                                        size={36}
-                                        className="mx-auto mb-3 opacity-30"
-                                    />
-                                    <p className="font-medium">
-                                        No files in this folder
+                                {filters.search && (
+                                    <p className="text-sm mt-1">
+                                        Try a different term or{" "}
+                                        <button
+                                            onClick={handleClear}
+                                            className="text-blue-600 underline"
+                                        >
+                                            clear filters
+                                        </button>
                                     </p>
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wide">
-                                                <th className="text-left px-5 py-3 font-medium">
-                                                    Name
-                                                </th>
-                                                <th className="text-left px-4 py-3 font-medium hidden md:table-cell">
-                                                    Doc Type
-                                                </th>
-                                                <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">
-                                                    Size
-                                                </th>
-                                                <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">
-                                                    Uploaded by
-                                                </th>
-                                                <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">
-                                                    Last Modified
-                                                </th>
-                                                <th className="text-right px-5 py-3 font-medium">
-                                                    Actions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-50">
-                                            {files.map((file) => (
-                                                <FileRow
-                                                    key={file.id}
-                                                    file={file}
-                                                />
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </section>
-                    )}
+                                )}
+                            </div>
+                        )}
 
-                    {/* Pagination — root only */}
-                    {isRoot && folders?.last_page > 1 && (
-                        <Pagination links={folders.links} meta={folders} />
+                        {/* Files table — only inside a folder */}
+                        {!isRoot && (
+                            <section>
+                                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                                    Files{" "}
+                                    <span className="text-gray-400 font-normal normal-case">
+                                        ({files?.length ?? 0})
+                                    </span>
+                                </h2>
+
+                                {files?.length === 0 ? (
+                                    <div className="bg-white rounded-xl border border-gray-200 py-16 text-center text-gray-400">
+                                        <File
+                                            size={36}
+                                            className="mx-auto mb-3 opacity-30"
+                                        />
+                                        <p className="font-medium">
+                                            No files in this folder
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                        <table className="w-full text-sm">
+                                            <thead>
+                                                <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wide">
+                                                    <th className="text-left px-5 py-3 font-medium">
+                                                        Name
+                                                    </th>
+                                                    <th className="text-left px-4 py-3 font-medium hidden md:table-cell">
+                                                        Doc Type
+                                                    </th>
+                                                    <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">
+                                                        Size
+                                                    </th>
+                                                    <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">
+                                                        Uploaded by
+                                                    </th>
+                                                    <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">
+                                                        Last Modified
+                                                    </th>
+                                                    <th className="text-right px-5 py-3 font-medium">
+                                                        Actions
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-50">
+                                                {files.map((file) => (
+                                                    <FileRow
+                                                        key={file.id}
+                                                        file={file}
+                                                    />
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
+                        {/* Pagination — root only */}
+                        {isRoot && folders?.last_page > 1 && (
+                            <Pagination links={folders.links} meta={folders} />
+                        )}
+                    </div>
+
+                    {selectedFolder && (
+                        <div className="w-72 shrink-0 border-l border-gray-200 p-4">
+                            <FileDetailsPanel
+                                folder={selectedFolder}
+                                onClose={() => setSelectedFolder(null)}
+                            />
+                        </div>
                     )}
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 

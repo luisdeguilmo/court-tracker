@@ -34,7 +34,7 @@ export default function ResetPassword({ token, email }) {
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className="mt-1 px-2 py-2.5 text-xs block w-full"
                         autoComplete="username"
                         onChange={(e) => setData('email', e.target.value)}
                     />
