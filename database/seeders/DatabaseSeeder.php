@@ -23,10 +23,11 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            UserSeeder::class,
-            FolderTypeSeeder::class,
-            FolderSeeder::class,
-            FileSeeder::class,
+            // UserSeeder::class,
+            // FolderTypeSeeder::class,
+            // FolderSeeder::class,
+            // FileSeeder::class,
+            RolesAndPermissionsSeeder::class
         ]);
     }
 }
