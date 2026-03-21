@@ -384,7 +384,7 @@ export default function FoldersIndex({
                 {/* Title */}
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">
-                        {currentFolder ? currentFolder.name : "Case Folders"}
+                        {currentFolder ? currentFolder.name : "Records"}
                     </h1>
                     <p className="text-sm text-gray-400 mt-0.5">
                         {isRoot

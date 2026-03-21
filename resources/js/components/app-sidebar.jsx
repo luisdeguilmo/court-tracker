@@ -4,6 +4,9 @@ import {
     Folder,
     LayoutDashboard,
     Settings,
+    Trash,
+    Trash2,
+    Users,
 } from "lucide-react";
 import {
     Sidebar,
@@ -22,19 +25,24 @@ const menu_items = [
         icon: LayoutDashboard,
     },
     {
-        title: "Folders",
+        title: "Records",
         url: "/folders",
         icon: Folder,
     },
     {
-        title: "Files",
-        url: "/box/files",
+        title: "My Drive",
+        url: "/folders",
         icon: BookText,
     },
     {
-        title: "Settings",
+        title: "Shared with me",
         url: "/settings",
-        icon: Settings,
+        icon: Users,
+    },
+    {
+        title: "Trash",
+        url: "/settings",
+        icon: Trash2,
     },
 ];
 

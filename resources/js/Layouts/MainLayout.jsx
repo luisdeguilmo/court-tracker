@@ -9,9 +9,9 @@ const MainLayout = ({ children }) => {
                 <AppSideBar />
                 <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
                     <Header />
-                    <div className="px-10 py-6 flex-1 overflow-y-hidden">
+                    <div className="px-10 py-6 flex-1 overflow-y-scroll">
                         {children}
-                    </div>
+                    </div> 
                 </div>
             </div>
         </SidebarProvider>
