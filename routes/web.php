@@ -49,6 +49,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BoxController;
 use App\Http\Controllers\FolderController;
+use App\Http\Controllers\RecordsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -77,6 +78,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/folders',         [FolderController::class, 'index'])->name('folders.index');
     Route::get('/folders/{folder}',[FolderController::class, 'show'])->name('folders.show');
     Route::post('/folders', [FolderController::class, 'store'])->name('folders.store');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/records', [RecordsController::class, 'index'])->name('records.index');
+    Route::post('/records', [RecordsController::class, 'store'])->name('records.store');
 });
 
 Route::middleware('auth')->group(function () {

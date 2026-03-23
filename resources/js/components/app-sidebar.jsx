@@ -26,7 +26,7 @@ const menu_items = [
     },
     {
         title: "Records",
-        url: "/folders",
+        url: "/records",
         icon: Folder,
     },
     {

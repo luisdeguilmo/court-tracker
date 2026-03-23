@@ -298,6 +298,8 @@ import AppBreadCrumb from "@/components/app-breadcrumb";
 import Toolbar from "@/components/toolbar";
 import SwitchLayout from "@/components/switch-layout";
 import FileDetailsPanel from "@/components/details-panel";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import FileCard from "@/components/file-card";
 
 const STATUS_PILL = {
     open: "bg-emerald-100 text-emerald-700",
@@ -362,6 +364,14 @@ export default function FoldersIndex({
         // );
     }
 
+    function handleFolderDoubleClick(folder) {
+        router.get(
+            route("folders.index"),
+            { folder_id: folder.id },
+            { preserveState: false },
+        );
+    }
+
     function handleNavigate(crumb) {
         if (!crumb) {
             router.get(route("folders.index"), {}, { preserveState: false });
@@ -378,7 +388,7 @@ export default function FoldersIndex({
     const displayFolders = isRoot ? (folders?.data ?? []) : (subfolders ?? []);
 
     return (
-        <div className=""> 
+        <div className="">
             <Head title={currentFolder ? currentFolder.name : "Folders"} />
             <div className="relative min-h-screen">
                 {/* Title */}
@@ -394,9 +404,10 @@ export default function FoldersIndex({
                 </div>
 
                 {/* Header */}
-                <div className="bg-white border-b border-gray-200 py-5">
+                <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-white w-full border-b border-gray-200 py-5">
                     <div className="w-full mb-3 flex justify-between items-center">
                         <AppBreadCrumb
+                            current="My Drive"
                             breadcrumbs={breadcrumbs}
                             currentFolder={currentFolder} // the currently open folder
                             onNavigate={handleNavigate}
@@ -447,7 +458,9 @@ export default function FoldersIndex({
 
                 {/* Body */}
                 <div className="flex">
-                    <div className={`max-w-7xl mx-auto py-8 space-y-8 overflow-y-scroll h-[450px] ${selectedFolder && "pr-4"}`}>
+                    <div
+                        className={`w-full mx-auto py-8 space-y-8 overflow-y-scroll h-[450px] ${selectedFolder && "pr-4"}`}
+                    >
                         {/* Subfolders grid */}
                         {displayFolders.length > 0 && (
                             <section>
@@ -463,6 +476,9 @@ export default function FoldersIndex({
                                             folder={folder}
                                             onClick={() =>
                                                 handleFolderClick(folder)
+                                            }
+                                            onDoubleClick={() =>
+                                                handleFolderDoubleClick(folder)
                                             }
                                         />
                                     ))}
@@ -496,7 +512,7 @@ export default function FoldersIndex({
 
                         {/* Files table — only inside a folder */}
                         {!isRoot && (
-                            <section>
+                            <section className="">
                                 <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
                                     Files{" "}
                                     <span className="text-gray-400 font-normal normal-case">
@@ -504,7 +520,7 @@ export default function FoldersIndex({
                                     </span>
                                 </h2>
 
-                                {files?.length === 0 ? (
+                                {/* {files?.length === 0 ? (
                                     <div className="bg-white rounded-xl border border-gray-200 py-16 text-center text-gray-400">
                                         <File
                                             size={36}
@@ -541,7 +557,7 @@ export default function FoldersIndex({
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
                                                 {files.map((file) => (
-                                                    <FileRow
+                                                    <FileCard
                                                         key={file.id}
                                                         file={file}
                                                     />
@@ -549,7 +565,13 @@ export default function FoldersIndex({
                                             </tbody>
                                         </table>
                                     </div>
-                                )}
+                                )} */}
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    {files.map((file) => (
+                                        <FileCard key={file.id} file={file} />
+                                    ))}
+                                </div>
                             </section>
                         )}
 
@@ -575,115 +597,242 @@ export default function FoldersIndex({
 
 FoldersIndex.layout = (page) => <MainLayout>{page}</MainLayout>;
 
-function FolderCard({ folder, onClick }) {
+// function FolderCard({ folder, onClick, onDoubleClick }) {
+//     return (
+//         <button
+//             onClick={onClick}
+//             onDoubleClick={onDoubleClick}
+//             className="text-left flex flex-col justify-between group bg-white rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200 overflow-hidden w-full"
+//         >
+//             <div className="px-5 pt-5 pb-2">
+//                 <div className="flex items-center gap-2 mb-2">
+//                     <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition">
+//                         <Folder size={18} className="text-blue-600" />
+//                     </div>
+//                 </div>
+//                 <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
+//                     {folder.folder_type?.id === 1
+//                         ? folder.name
+//                         : (folder.case_title ?? folder.name)}
+//                 </h3>
+//                 {folder.case_number && (
+//                     <p className="mt-1 text-xs text-gray-400 font-mono">
+//                         {folder.case_number}
+//                     </p>
+//                 )}
+//             </div>
+//             <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+//                 <div className="flex items-center gap-1 text-xs text-gray-400">
+//                     <FileText size={13} />
+//                     <span>
+//                         {folder.files_count ?? 0} file
+//                         {(folder.files_count ?? 0) !== 1 ? "s" : ""}
+//                     </span>
+//                 </div>
+//                 <ChevronRight
+//                     size={14}
+//                     className="text-gray-300 group-hover:text-blue-500 transition"
+//                 />
+//             </div>
+//         </button>
+//     );
+// }
+
+function FolderCard({ folder, onClick, onDoubleClick }) {
     return (
-        <button
+        <Card
+            onDoubleClick={onDoubleClick}
             onClick={onClick}
-            className="text-left flex flex-col justify-between group bg-white rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200 overflow-hidden w-full"
+            className="cursor-pointer hover:border-blue-400 hover:shadow-md transition"
         >
-            <div className="px-5 pt-5 pb-2">
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition">
-                        <Folder size={18} className="text-blue-600" />
-                    </div>
-                </div>
-                <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
+            <CardContent>
+                <div className="flex items-center gap-2">
+                    <Folder className="w-5 h-5" />
                     {folder.folder_type?.id === 1
                         ? folder.name
                         : (folder.case_title ?? folder.name)}
-                </h3>
-                {folder.case_number && (
-                    <p className="mt-1 text-xs text-gray-400 font-mono">
-                        {folder.case_number}
-                    </p>
-                )}
-            </div>
-            <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-1 text-xs text-gray-400">
-                    <FileText size={13} />
-                    <span>
-                        {folder.files_count ?? 0} file
-                        {(folder.files_count ?? 0) !== 1 ? "s" : ""}
-                    </span>
                 </div>
-                <ChevronRight
-                    size={14}
-                    className="text-gray-300 group-hover:text-blue-500 transition"
-                />
-            </div>
-        </button>
-    );
-}
-
-function FileRow({ file }) {
-    const download = (id) => window.open(`/box/download/${id}`, "_blank");
-
-    return (
-        <tr className="hover:bg-gray-50 transition">
-            <td className="px-5 py-3.5">
-                <div className="flex items-center gap-3">
-                    <span
-                        className={`p-1.5 rounded-lg ${file.is_sealed ? "bg-red-50 text-red-400" : "bg-blue-50 text-blue-500"}`}
-                    >
-                        {file.is_sealed ? (
-                            <Lock size={15} />
-                        ) : (
-                            <FileIcon extension={file.extension} />
-                        )}
-                    </span>
-                    <div>
-                        <p className="font-medium text-gray-800 line-clamp-1">
-                            {file.name}
-                        </p>
-                        <p className="text-xs text-gray-400 uppercase">
-                            .{file.extension}
-                            {file.is_sealed && (
-                                <span className="ml-2 text-red-400 normal-case font-medium">
-                                    Sealed
-                                </span>
-                            )}
-                        </p>
+            </CardContent>
+            <CardFooter>
+                <div className="w-full">
+                    <div className="border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-xs text-gray-600">
+                            <FileText size={13} className="text-gray-600" />
+                            <span>
+                                {folder.files_count ?? 0} file
+                                {(folder.files_count ?? 0) !== 1 ? "s" : ""}
+                            </span>
+                        </div>
+                        <ChevronRight
+                            size={14}
+                            className="text-gray-300 group-hover:text-blue-500 transition"
+                        />
                     </div>
                 </div>
-            </td>
-            <td className="px-4 py-3.5 text-gray-500 hidden md:table-cell">
-                {file.document_type ?? <span className="text-gray-300">—</span>}
-            </td>
-            <td className="px-4 py-3.5 text-gray-500 hidden sm:table-cell">
-                {file.size_human}
-            </td>
-            <td className="px-4 py-3.5 text-gray-500 hidden lg:table-cell">
-                {file.uploaded_by}
-            </td>
-            <td className="px-4 py-3.5 text-gray-400 text-xs hidden lg:table-cell">
-                {file.box_modified_at ? (
-                    new Date(file.box_modified_at).toLocaleDateString(
-                        undefined,
-                        { year: "numeric", month: "short", day: "numeric" },
-                    )
-                ) : (
-                    <span className="text-gray-300">—</span>
-                )}
-            </td>
-            <td className="px-5 py-3.5 text-right">
-                {file.is_sealed ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-gray-300 select-none">
-                        <Lock size={13} /> Restricted
-                    </span>
-                ) : file.download_url ? (
-                    <button
-                        onClick={() => download(file.box_file_id)}
-                        className="text-green-600 hover:underline text-sm"
-                    >
-                        Download
-                    </button>
-                ) : (
-                    <span className="text-xs text-gray-300">Unavailable</span>
-                )}
-            </td>
-        </tr>
+            </CardFooter>
+        </Card>
     );
 }
+
+// function FileRow({ file }) {
+//     const download = (id) => window.open(`/box/download/${id}`, "_blank");
+
+//     return (
+//         <tr className="hover:bg-gray-50 transition">
+//             <td className="px-5 py-3.5">
+//                 <div className="flex items-center gap-3">
+//                     <span
+//                         className={`p-1.5 rounded-lg ${file.is_sealed ? "bg-red-50 text-red-400" : "bg-blue-50 text-blue-500"}`}
+//                     >
+//                         {file.is_sealed ? (
+//                             <Lock size={15} />
+//                         ) : (
+//                             <FileIcon extension={file.extension} />
+//                         )}
+//                     </span>
+//                     <div>
+//                         <p className="font-medium text-gray-800 line-clamp-1">
+//                             {file.name}
+//                         </p>
+//                         <p className="text-xs text-gray-400 uppercase">
+//                             .{file.extension}
+//                             {file.is_sealed && (
+//                                 <span className="ml-2 text-red-400 normal-case font-medium">
+//                                     Sealed
+//                                 </span>
+//                             )}
+//                         </p>
+//                     </div>
+//                 </div>
+//             </td>
+//             <td className="px-4 py-3.5 text-gray-500 hidden md:table-cell">
+//                 {file.document_type ?? <span className="text-gray-300">—</span>}
+//             </td>
+//             <td className="px-4 py-3.5 text-gray-500 hidden sm:table-cell">
+//                 {file.size_human}
+//             </td>
+//             <td className="px-4 py-3.5 text-gray-500 hidden lg:table-cell">
+//                 {file.uploaded_by}
+//             </td>
+//             <td className="px-4 py-3.5 text-gray-400 text-xs hidden lg:table-cell">
+//                 {file.box_modified_at ? (
+//                     new Date(file.box_modified_at).toLocaleDateString(
+//                         undefined,
+//                         { year: "numeric", month: "short", day: "numeric" },
+//                     )
+//                 ) : (
+//                     <span className="text-gray-300">—</span>
+//                 )}
+//             </td>
+//             <td className="px-5 py-3.5 text-right">
+//                 {file.is_sealed ? (
+//                     <span className="inline-flex items-center gap-1 text-xs text-gray-300 select-none">
+//                         <Lock size={13} /> Restricted
+//                     </span>
+//                 ) : file.download_url ? (
+//                     <button
+//                         onClick={() => download(file.box_file_id)}
+//                         className="text-green-600 hover:underline text-sm"
+//                     >
+//                         Download
+//                     </button>
+//                 ) : (
+//                     <span className="text-xs text-gray-300">Unavailable</span>
+//                 )}
+//             </td>
+//         </tr>
+//     );
+// }
+
+// function FileCard({ file }) {
+//     const download = (id) => window.open(`/box/download/${id}`, "_blank");
+
+//     const isPreviewable = ["pdf"].includes(file.extension?.toLowerCase());
+
+//     return (
+//         <Card className="group overflow-hidden border border-gray-200 bg-white transition-all duration-200 hover:border-blue-400 hover:shadow-md">
+//             {/* Preview */}
+//             <div className="w-full bg-gray-100 aspect-video flex items-center justify-center">
+//                 {file.is_sealed ? (
+//                     <div className="flex flex-col items-center text-gray-400 text-sm">
+//                         <Lock size={20} />
+//                         <span className="mt-1">Sealed File</span>
+//                     </div>
+//                 ) : isPreviewable && file.download_url ? (
+//                     <iframe
+//                         src={file.download_url}
+//                         title={file.name}
+//                         className="w-full h-full"
+//                     />
+//                 ) : (
+//                     <div className="flex flex-col items-center text-gray-400 text-sm">
+//                         <FileText size={20} />
+//                         <span className="mt-1">No Preview</span>
+//                     </div>
+//                 )}
+//             </div>
+
+//             {/* Content */}
+//             <CardContent className="px-4 py-3">
+//                 <h3 className="font-medium text-gray-800 text-sm line-clamp-1">
+//                     {file.name}
+//                 </h3>
+
+//                 <p className="text-xs text-gray-400 uppercase mt-1">
+//                     .{file.extension}
+//                     {file.is_sealed && (
+//                         <span className="ml-2 text-red-400 normal-case font-medium">
+//                             Sealed
+//                         </span>
+//                     )}
+//                 </p>
+
+//                 <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+//                     <p>
+//                         Type:{" "}
+//                         {file.document_type ?? (
+//                             <span className="text-gray-300">—</span>
+//                         )}
+//                     </p>
+//                     <p>Size: {file.size_human}</p>
+//                     <p>By: {file.uploaded_by}</p>
+//                 </div>
+//             </CardContent>
+
+//             {/* Footer */}
+//             <CardFooter className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+//                 <span className="text-xs text-gray-400">
+//                     {file.box_modified_at
+//                         ? new Date(file.box_modified_at).toLocaleDateString(
+//                               undefined,
+//                               {
+//                                   year: "numeric",
+//                                   month: "short",
+//                                   day: "numeric",
+//                               },
+//                           )
+//                         : "—"}
+//                 </span>
+
+//                 {file.is_sealed ? (
+//                     <span className="text-xs text-gray-300 flex items-center gap-1">
+//                         <Lock size={12} /> Restricted
+//                     </span>
+//                 ) : file.download_url ? (
+//                     <button
+//                         onClick={() => download(file.box_file_id)}
+//                         className="flex items-center gap-1 text-green-600 hover:underline text-xs"
+//                     >
+//                         <Download size={14} />
+//                         Download
+//                     </button>
+//                 ) : (
+//                     <span className="text-xs text-gray-300">Unavailable</span>
+//                 )}
+//             </CardFooter>
+//         </Card>
+//     );
+// }
 
 function Pagination({ links, meta }) {
     return (

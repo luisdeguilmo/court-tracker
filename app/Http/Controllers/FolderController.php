@@ -15,62 +15,8 @@ use Inertia\Response;
 class FolderController extends Controller
 {
     // V3 - Added auth guard to redirect to Box connection if not connected yet
-     public function __construct(protected BoxService $box) {}
- 
+    public function __construct(protected BoxService $box) {}
   
-    // public function index(Request $request): Response|RedirectResponse
-    // {
-    //     // Same guard as BoxController — redirect if not connected to Box yet
-    //     if (!BoxToken::where('user_id', Auth::id())->exists()) {
-    //         return redirect()->route('box.connect');
-    //     }
-
-    //     $folders = Folder::with(['folderType', 'files'])
-    //     ->where('user_id', Auth::id())
-    //     ->whereNull('parent_id') // ← only root level
-    //     ->when(
-    //          $request->search,
-    //             fn($q, $s) => $q->where('name', 'like', "%{$s}%")
-    //                 ->orWhere('case_number', 'like', "%{$s}%")
-    //                 ->orWhere('case_title', 'like', "%{$s}%")
-    //     )->when(
-    //             $request->folder_type_id,
-    //             fn($q, $id) => $q->where('folder_type_id', $id)
-    //         )
-    //     ->paginate(12);
-    
-    //     // $folders = Folder::with(['folderType', 'files'])
-    //     //     ->where('user_id', Auth::id())
-    //     //     ->when(
-    //     //         $request->search,
-    //     //         fn($q, $s) => $q->where('name', 'like', "%{$s}%")
-    //     //             ->orWhere('case_number', 'like', "%{$s}%")
-    //     //             ->orWhere('case_title', 'like', "%{$s}%")
-    //     //     )
-    //     //     ->when(
-    //     //         $request->folder_type_id,
-    //     //         fn($q, $id) => $q->where('folder_type_id', $id)
-    //     //     )
-    //     //     ->latest()
-    //     //     ->paginate(12)
-    //     //     ->withQueryString()
-    //     //     ->through(fn($folder) => [
-    //     //         'id'            => $folder->id,
-    //     //         'name'          => $folder->name,
-    //     //         'case_number'   => $folder->case_number,
-    //     //         'case_title'    => $folder->case_title,
-    //     //         'case_status'   => $folder->case_status,
-    //     //         'box_folder_id' => $folder->box_folder_id,
-    //     //         'folder_type'   => $folder->folderType?->only('id', 'name'),
-    //     //         'files_count'   => $folder->files->count(),
-    //     //     ]);
- 
-    //     return Inertia::render('Folders/Index', [
-    //         'folders' => $folders,
-    //         'filters' => $request->only(['search', 'folder_type_id']),
-    //     ]);
-    // }
-
     public function index(Request $request): Response|RedirectResponse
 {
     if (!BoxToken::where('user_id', Auth::id())->exists()) {
@@ -133,7 +79,7 @@ class FolderController extends Controller
                 'document_type'   => $file->document_type,
                 'is_sealed'       => $file->is_sealed,
                 'box_file_id'     => $file->box_file_id,
-                'uploaded_by'     => $file->uploadedBy->name,
+                // 'uploaded_by'     => $file->uploadedBy->name,
                 'created_at'      => $file->created_at->toDateTimeString(),
                 'box_modified_at' => $boxMeta['modified_at'] ?? null,
                 'download_url'    => $file->is_sealed
@@ -193,63 +139,6 @@ class FolderController extends Controller
     ]);
 }
  
-    // public function show(Folder $folder): Response|RedirectResponse
-    // {
-    //     // Ensure the folder belongs to the logged-in user
-    //     abort_if($folder->user_id !== Auth::id(), 403);
- 
-    //     // Same guard as BoxController
-    //     if (!BoxToken::where('user_id', Auth::id())->exists()) {
-    //         return redirect()->route('box.connect');
-    //     }
- 
-    //     $folder->load(['folderType', 'user', 'files.uploadedBy']);
- 
-    //     // Fetch live Box items for this folder, keyed by box_file_id
-    //     $boxItems = [];
-    //     if ($folder->box_folder_id) {
-    //         $boxItems = collect($this->box->getFiles($folder->box_folder_id))
-    //             ->keyBy('id')
-    //             ->toArray();
-    //     }
- 
-    //     $files = $folder->files->map(function ($file) use ($boxItems) {
-    //         $boxMeta = $boxItems[$file->box_file_id] ?? null;
- 
-    //         return [
-    //             'id'              => $file->id,
-    //             'name'            => $file->name,
-    //             'extension'       => $file->extension,
-    //             'size'            => $file->size,
-    //             'size_human'      => $this->formatBytes($file->size),
-    //             'document_type'   => $file->document_type,
-    //             'is_sealed'       => $file->is_sealed,
-    //             'box_file_id'     => $file->box_file_id,
-    //             'uploaded_by'     => $file->uploadedBy->name,
-    //             'created_at'      => $file->created_at->toDateTimeString(),
-    //             'box_modified_at' => $boxMeta['modified_at'] ?? null,
-    //             // Points to the EXISTING BoxController::download() route
-    //             // so no duplicate download logic is needed here
-    //             'download_url'    => $file->is_sealed
-    //                 ? null
-    //                 : route('box.download', $file->box_file_id),
-    //         ];
-    //     });
- 
-    //     return Inertia::render('Folders/Show', [
-    //         'folder' => [
-    //             'id'          => $folder->id,
-    //             'name'        => $folder->name,
-    //             'case_number' => $folder->case_number,
-    //             'case_title'  => $folder->case_title,
-    //             'case_status' => $folder->case_status,
-    //             'folder_type' => $folder->folderType?->only('id', 'name'),
-    //             'owner'       => $folder->user->name,
-    //         ],
-    //         'files' => $files,
-    //     ]);
-    // }
-
     public function show(Folder $folder): Response|RedirectResponse
 {
     abort_if($folder->user_id !== Auth::id(), 403);

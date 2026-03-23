@@ -7,16 +7,16 @@ import {
     BreadcrumbSeparator,
 } from "./ui/breadcrumb";
 
-const AppBreadCrumb = ({ breadcrumbs, currentFolder, onNavigate }) => {
+const AppBreadCrumb = ({ current, breadcrumbs, currentFolder, onNavigate }) => {
     return (
         <Breadcrumb>
-            <BreadcrumbList className={'text-[15px]'}>
+            <BreadcrumbList className={"text-[15px]"}>
                 <BreadcrumbItem>
                     <BreadcrumbLink
                         onClick={() => onNavigate(null)}
                         style={{ cursor: "pointer" }}
                     >
-                        Home
+                        {current}
                     </BreadcrumbLink>
                 </BreadcrumbItem>
 
@@ -38,7 +38,9 @@ const AppBreadCrumb = ({ breadcrumbs, currentFolder, onNavigate }) => {
                     <>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <BreadcrumbPage>{currentFolder.name}</BreadcrumbPage>
+                            <BreadcrumbPage>
+                                {currentFolder.name}
+                            </BreadcrumbPage>
                         </BreadcrumbItem>
                     </>
                 )}
