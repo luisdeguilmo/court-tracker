@@ -13,11 +13,12 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FilePlus, FolderPlus, Plus } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StandardFolderDialog } from "./standard-folder-dialog";
 import CaseFolderDialog from "./case-folder-dialog";
 import { can } from "@/utils/permission";
 import { usePage } from "@inertiajs/react";
+import UploadForm from "./upload-form";
 
 export function AppDropdown({ parentId }) {
     const [isStandardFolderDialogOpen, setIsStandardFolderDialogOpen] =
@@ -25,6 +26,11 @@ export function AppDropdown({ parentId }) {
     const [isCaseFolderDialogOpen, setIsCaseFolderDialogOpen] = useState(false);
 
     const { auth } = usePage().props;
+    const fileInputRef = useRef();
+
+    const handleButtonClick = () => {
+        fileInputRef.current.click();
+    };
 
     return (
         <>
@@ -39,7 +45,10 @@ export function AppDropdown({ parentId }) {
                     <DropdownMenuGroup>
                         {can("upload documents", auth) && (
                             <>
-                                <DropdownMenuItem className="flex items-center gap-3">
+                                <DropdownMenuItem
+                                    onClick={handleButtonClick}
+                                    className="flex items-center gap-3"
+                                >
                                     <FilePlus className="w-5 h-5" />
                                     Upload file
                                 </DropdownMenuItem>
@@ -87,6 +96,8 @@ export function AppDropdown({ parentId }) {
                 open={isCaseFolderDialogOpen}
                 setIsOpen={setIsCaseFolderDialogOpen}
             />
+
+            <UploadForm fileInputRef={fileInputRef} folderId={24} />
         </>
     );
 }

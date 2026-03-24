@@ -48,6 +48,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BoxController;
+use App\Http\Controllers\FileController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\RecordsController;
 use Illuminate\Foundation\Application;
@@ -78,6 +79,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/folders',         [FolderController::class, 'index'])->name('folders.index');
     Route::get('/folders/{folder}',[FolderController::class, 'show'])->name('folders.show');
     Route::post('/folders', [FolderController::class, 'store'])->name('folders.store');
+
+    // Route::get('/files', [FileController::class, 'index'])
+    //     ->name('files.index');
+ 
+    Route::post('/files', [FileController::class, 'store'])
+        ->name('files.store');
+    Route::get('/files/{file}', [FileController::class, 'show'])
+        ->name('files.show');
+    Route::delete('/files/{file}', [FileController::class, 'destroy'])
+        ->name('files.destroy');
 });
 
 Route::middleware(['auth'])->group(function () {

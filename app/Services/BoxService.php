@@ -120,4 +120,37 @@ class BoxService
 
         return $response->json('id'); // ← This is the box_folder_id you store in DB
     }
+
+    public function uploadFile(\Illuminate\Http\UploadedFile $file, string $folderId = '0'): string
+{
+    $token = $this->getValidToken();
+
+    $response = Http::withoutVerifying()
+        ->withToken($token)
+        ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
+        ->post('https://upload.box.com/api/2.0/files/content', [
+            'attributes' => json_encode([
+                'name'   => $file->getClientOriginalName(),
+                'parent' => ['id' => $folderId],
+            ]),
+        ]);
+
+    if ($response->failed()) {
+        throw new \Exception('Box file upload failed: ' . $response->body());
+    }
+
+    return $response->json('entries.0.id');
+}
+
+public function deleteFile(string $fileId): void
+{
+    $token    = $this->getValidToken();
+    $response = Http::withoutVerifying()
+        ->withToken($token)
+        ->delete("https://api.box.com/2.0/files/{$fileId}");
+
+    if ($response->failed()) {
+        throw new \Exception('Box file deletion failed: ' . $response->body());
+    }
+}
 }
