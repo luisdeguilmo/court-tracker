@@ -7,6 +7,8 @@ import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+await fetch('/sanctum/csrf-cookie', { credentials: 'include' });
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>

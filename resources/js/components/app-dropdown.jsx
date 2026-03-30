@@ -13,7 +13,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FilePlus, FolderPlus, Plus } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StandardFolderDialog } from "./standard-folder-dialog";
 import CaseFolderDialog from "./case-folder-dialog";
 import { can } from "@/utils/permission";
@@ -24,6 +24,19 @@ export function AppDropdown({ parentId }) {
     const [isStandardFolderDialogOpen, setIsStandardFolderDialogOpen] =
         useState(false);
     const [isCaseFolderDialogOpen, setIsCaseFolderDialogOpen] = useState(false);
+    const [folderId, setFolderId] = useState(null);
+
+    useEffect(() => {
+        // Get the query string from the URL
+        const queryString = window.location.search; // "?folder_id=34"
+
+        // Parse the query string
+        const params = new URLSearchParams(queryString);
+
+        // Get the value of "folder_id"
+        const id = params.get("folder_id");
+        setFolderId(id);
+    }, []);
 
     const { auth } = usePage().props;
     const fileInputRef = useRef();
@@ -31,6 +44,8 @@ export function AppDropdown({ parentId }) {
     const handleButtonClick = () => {
         fileInputRef.current.click();
     };
+
+    console.log(folderId);
 
     return (
         <>
@@ -43,21 +58,21 @@ export function AppDropdown({ parentId }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                     <DropdownMenuGroup>
-                        {can("upload documents", auth) && (
-                            <>
-                                <DropdownMenuItem
-                                    onClick={handleButtonClick}
-                                    className="flex items-center gap-3"
-                                >
-                                    <FilePlus className="w-5 h-5" />
-                                    Upload file
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="flex items-center gap-3">
-                                    <FilePlus className="w-5 h-5" />
-                                    Upload folder
-                                </DropdownMenuItem>
-                            </>
-                        )}
+                        {/* {can("upload documents", auth) && ( */}
+                        <>
+                            <DropdownMenuItem
+                                onClick={handleButtonClick}
+                                className="flex items-center gap-3"
+                            >
+                                <FilePlus className="w-5 h-5" />
+                                Upload file
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-3">
+                                <FilePlus className="w-5 h-5" />
+                                Upload folder
+                            </DropdownMenuItem>
+                        </>
+                        {/* )} */}
                         <DropdownMenuSub>
                             <DropdownMenuSubTrigger className="flex items-center gap-3">
                                 <FolderPlus className="w-5 h-5" />
@@ -97,7 +112,7 @@ export function AppDropdown({ parentId }) {
                 setIsOpen={setIsCaseFolderDialogOpen}
             />
 
-            <UploadForm fileInputRef={fileInputRef} folderId={24} />
+            <UploadForm fileInputRef={fileInputRef} folderId={folderId} />
         </>
     );
 }

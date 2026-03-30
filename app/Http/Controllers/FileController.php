@@ -80,12 +80,6 @@ class FileController extends Controller
  
     public function store(StoreFileRequest $request): RedirectResponse
     {
-        if (!BoxToken::where('user_id', Auth::id())->exists()) {
-            return redirect()->route('box.connect');
-        }
- 
-        // folder_id is nullable (root-level upload) — StoreFileRequest already
-        // verified ownership if a folder_id was provided
         $folder = $request->folder_id
             ? Folder::find($request->folder_id)
             : null;
@@ -95,7 +89,7 @@ class FileController extends Controller
         // 1. Upload to Box under the folder's Box ID, or root ('0') if none
         $boxFileId = $this->box->uploadFile(
             $uploadedFile,
-            $folder?->box_folder_id ?? '0'
+            $folder?->box_folder_id ?? env('BOX_ROOT_FOLDER_ID', '0')
         );
  
         // 2. Persist locally
@@ -116,10 +110,6 @@ class FileController extends Controller
     public function destroy(File $file): RedirectResponse
     {
         abort_if($file->folder->user_id !== Auth::id(), 403);
- 
-        if (!BoxToken::where('user_id', Auth::id())->exists()) {
-            return redirect()->route('box.connect');
-        }
  
         // 1. Delete from Box
         if ($file->box_file_id) {

@@ -13,11 +13,11 @@ const Header = () => {
 
     return (
         <header className="relative">
-            <nav className={`bg-white border-b px-4 py-2.5 flex justify-between items-center`}>
+            <nav className={`bg-white border-b px-4 py-2.5 flex  items-center`}>
                 <SidebarTrigger />
                 <SearchBar />
 
-                <div className="relative">
+                <div className="relative ml-auto">
                     <div className="flex justify-between">
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
                             <div className="relative ms-3">

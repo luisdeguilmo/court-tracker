@@ -13,6 +13,8 @@ export default function UploadForm({
     const [error, setError] = useState(null);
     const [processing, setProcessing] = useState(false);
 
+    console.log(folderId);
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;

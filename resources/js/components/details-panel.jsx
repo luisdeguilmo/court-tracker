@@ -36,9 +36,13 @@ export default function FileDetailsPanel({ folder, onClose, file }) {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     {/* <Folder size={18} className="text-amber-500" /> */}
-                    <span className="font-semibold text-sm">{folder?.name}</span>
+                    <span className="font-semibold text-sm">
+                        {folder.folder_type?.id === 1
+                            ? folder.name
+                            : (folder.case_title ?? folder.name)}
+                    </span>
                 </div>
-                <button onClick={onClose}>
+                <button onClick={() => onClose(false)}>
                     <X size={16} className="text-gray-400" />
                 </button>
             </div>
@@ -89,6 +93,56 @@ export default function FileDetailsPanel({ folder, onClose, file }) {
             ))}
 
             <Separator className="my-4" />
+
+            <p className="text-sm font-medium mb-1">Folder Details</p>
+
+            <p className="text-xs font-medium mt-3 text-gray-800">Owner</p>
+            <p className="text-xs text-muted-foreground mb-3">{folder.owner}</p>
+
+            <p className="text-xs font-medium mt-3 text-gray-800">Modified</p>
+            <p className="text-xs text-muted-foreground mb-3">
+                {" "}
+                {folder.updated_at
+                    ? new Date(folder.updated_at).toLocaleDateString(
+                          undefined,
+                          {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                          },
+                      )
+                    : "—"}
+            </p>
+
+            <p className="text-xs font-medium mt-3 text-gray-800">Opened</p>
+            <p className="text-xs text-muted-foreground mb-3">
+                {" "}
+                {folder.created_at
+                    ? new Date(folder.created_at).toLocaleDateString(
+                          undefined,
+                          {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                          },
+                      )
+                    : "—"}
+            </p>
+
+            <p className="text-xs font-medium mt-3 text-gray-800">Created</p>
+            <p className="text-xs text-muted-foreground mb-3">
+                {folder.created_at
+                    ? new Date(folder.created_at).toLocaleDateString(
+                          undefined,
+                          {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                          },
+                      )
+                    : "—"}
+            </p>
+
             <p className="text-sm text-blue-600 text-center cursor-pointer">
                 More details
             </p>

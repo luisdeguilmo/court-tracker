@@ -47,23 +47,27 @@ const menu_items = [
 ];
 
 const AppSideBar = () => {
+    const path = window.location.pathname;
+
     return (
         <Sidebar variant="sidebar" collapsible="icon">
-            <SidebarHeader className="text-lg text-center font-bold px-4 py-2">
-                Case Tracker
-            </SidebarHeader>
-
-            <SidebarContent>
+            <SidebarContent className={""}>
+                <SidebarHeader className="text-lg text-center font-bold px-4 py-2">
+                    Case Tracker
+                </SidebarHeader>
                 <SidebarMenu>
                     {menu_items.map((item) => (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton className={"px-6"} asChild>
+                            <SidebarMenuButton
+                                className={`p-4 text-gray-900 hover:bg-gray-100 ${path === item.url && "bg-gray-100"}`}
+                                asChild
+                            >
                                 <a
                                     href={item.url}
                                     className="flex items-center gap-2"
                                 >
                                     <item.icon className="w-4 h-4" />
-                                    <span className="text-gray-900">
+                                    <span>
                                         {item.title}
                                     </span>
                                 </a>
@@ -71,10 +75,8 @@ const AppSideBar = () => {
                         </SidebarMenuItem>
                     ))}
                 </SidebarMenu>
-            </SidebarContent>
 
-            {/* 👇 Footer Section */}
-            <SidebarFooter>
+                 {/* <SidebarFooter>
                 <div className="flex items-center justify-between px-4 py-3 border-t">
                     <div className="flex items-center gap-3">
                         <img
@@ -91,7 +93,9 @@ const AppSideBar = () => {
                     </div>
                     <ChevronsUpDown className="w-4 h-4 text-muted-foreground" />
                 </div>
-            </SidebarFooter>
+            </SidebarFooter> */}
+            </SidebarContent>
+
         </Sidebar>
     );
 };

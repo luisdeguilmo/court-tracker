@@ -2,89 +2,111 @@
 
 namespace App\Services;
 
-use App\Models\BoxToken;
+use Box\SDK\Box;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\UploadedFile;
 
 class BoxService
 {
-    // ** V3 **
-     public function getAuthUrl(): string
+    protected function getClient(): \GuzzleHttp\Client
     {
-        $params = http_build_query([
-            'response_type' => 'code',
-            'client_id'     => env('BOX_CLIENT_ID'),
-            'redirect_uri'  => env('BOX_REDIRECT_URI'),
+        $token = $this->getValidToken();
+
+        return new \GuzzleHttp\Client([
+            'base_uri' => 'https://api.box.com/2.0/',
+            'verify'   => false,
+            'headers'  => [
+                'Authorization' => "Bearer {$token}",
+                'Content-Type'  => 'application/json',
+            ],
         ]);
-
-        return "https://account.box.com/api/oauth2/authorize?{$params}";
     }
 
-    public function getAccessToken(string $code): array
+    public function getValidToken(): string
     {
-        $response = Http::withoutVerifying()
-            ->asForm()
-            ->post('https://api.box.com/oauth2/token', [
-                'grant_type'    => 'authorization_code',
-                'code'          => $code,
-                'client_id'     => env('BOX_CLIENT_ID'),
-                'client_secret' => env('BOX_CLIENT_SECRET'),
-                'redirect_uri'  => env('BOX_REDIRECT_URI'),
-            ]);
+        return Cache::remember('box_jwt_token', 3000, function () {
+            $now = time() - 10; // ← fix clock skew
+            $keyId = env('BOX_JWT_PUBLIC_KEY_ID');
+            $enterpriseId = env('BOX_ENTERPRISE_ID');
+            $clientId = env('BOX_CLIENT_ID');
+            $clientSecret = env('BOX_CLIENT_SECRET');
+            // $privateKeyPath = env('BOX_JWT_PRIVATE_KEY_PATH');
+            $passphrase = env('BOX_JWT_PRIVATE_KEY_PASSPHRASE');
+            // $privateKeyPath = storage_path('app/box/private_key.pem');
 
-        return $response->json();
-    }
+            $privateKeyContent = file_get_contents(storage_path('app/box/private_key.pem'));
 
-    public function refreshToken(string $refreshToken): array
-    {
-        $response = Http::withoutVerifying()
-            ->asForm()
-            ->post('https://api.box.com/oauth2/token', [
-                'grant_type'    => 'refresh_token',
-                'refresh_token' => $refreshToken,
-                'client_id'     => env('BOX_CLIENT_ID'),
-                'client_secret' => env('BOX_CLIENT_SECRET'),
-            ]);
+            // Fix escaped newlines if key was copied from .env or JSON
+            $privateKeyContent = str_replace(['\r\n', '\n', '\r'], "\n", $privateKeyContent);
 
-        return $response->json();
-    }
+            $privateKey = openssl_pkey_get_private($privateKeyContent, $passphrase);
 
-    // Gets a valid token for the current user — auto-refreshes if expired
-    public function getValidToken(): ?string
-    {
-        $boxToken = BoxToken::where('user_id', Auth::id())->first();
+            if (!$privateKey) {
+                throw new \Exception('Failed to load Box private key: ' . openssl_error_string());
+            }
 
-        if (!$boxToken) {
-            return null;
-        }
+            // // Load private key
+            // $privateKey = openssl_pkey_get_private(
+            //     // file_get_contents($privateKeyPath),
+            //     $passphrase
+            // );
 
-        if ($boxToken->isExpired()) {
-            $tokens = $this->refreshToken($boxToken->refresh_token);
+            // Build JWT claims
+            $claims = [
+                'iss' => $clientId,
+                'sub' => $enterpriseId,
+                'box_sub_type' => 'enterprise',
+                'aud' => 'https://api.box.com/oauth2/token',
+                'jti' => bin2hex(random_bytes(16)),
+                'exp' => $now + 60,
+                'iat' => $now,
+            ];
 
-            $boxToken->update([
-                'access_token'  => $tokens['access_token'],
-                'refresh_token' => $tokens['refresh_token'],
-                'expires_at'    => Carbon::now()->addSeconds($tokens['expires_in']),
-            ]);
-        }
+            // Encode JWT manually (or use lcobucci/jwt)
+            $header = base64url_encode(json_encode([
+                'alg' => 'RS256',
+                'typ' => 'JWT',
+                'kid' => $keyId,
+            ]));
+            $payload = base64url_encode(json_encode($claims));
+            $data = "$header.$payload";
 
-        return $boxToken->access_token;
+            openssl_sign($data, $signature, $privateKey, OPENSSL_ALGO_SHA256);
+            $jwt = $data . '.' . base64url_encode($signature);
+
+            // Exchange JWT for access token
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->asForm()
+                ->post('https://api.box.com/oauth2/token', [
+                    'grant_type'         => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                    'client_id'          => $clientId,
+                    'client_secret'      => $clientSecret,
+                    'assertion'          => $jwt,
+                ]);
+
+            if ($response->failed()) {
+                throw new \Exception('Box JWT auth failed: ' . $response->body());
+            }
+
+            return $response->json('access_token');
+        });
     }
 
     public function getFiles(string $folderId = '0'): array
     {
-        $token    = $this->getValidToken();
-        $response = Http::withoutVerifying()
-            ->withToken($token)
-            ->get("https://api.box.com/2.0/folders/{$folderId}/items", [
+        $client = $this->getClient();
+
+        $response = $client->get("folders/{$folderId}/items", [
+            'query' => [
                 'fields' => 'id,name,type,size,modified_at',
                 'limit'  => 100,
-            ]);
+            ],
+        ]);
 
-        return collect($response->json('entries'))->map(fn($item) => [
+        $entries = json_decode($response->getBody(), true)['entries'] ?? [];
+
+        return collect($entries)->map(fn($item) => [
             'id'          => $item['id'],
             'name'        => $item['name'],
             'type'        => $item['type'],
@@ -95,8 +117,9 @@ class BoxService
 
     public function getDownloadUrl(string $fileId): string
     {
-        $token    = $this->getValidToken();
-        $response = Http::withoutVerifying()
+        $token = $this->getValidToken();
+
+        $response = \Illuminate\Support\Facades\Http::withoutVerifying()
             ->withToken($token)
             ->withoutRedirecting()
             ->get("https://api.box.com/2.0/files/{$fileId}/content");
@@ -106,51 +129,58 @@ class BoxService
 
     public function createFolder(string $name, string $parentId = '0'): string
     {
-        $token = $this->getValidToken(); // your existing token-fetch logic
+         $parentId = ($parentId !== '' && $parentId !== '0')
+        ? $parentId
+        : env('BOX_ROOT_FOLDER_ID', '0');
 
-        $response = Http::withoutVerifying()->withToken($token)
-            ->post('https://api.box.com/2.0/folders', [
+        $client = $this->getClient();
+
+        $response = $client->post('folders', [
+            'json' => [
                 'name'   => $name,
                 'parent' => ['id' => $parentId],
+            ],
+        ]);
+
+        $data = json_decode($response->getBody(), true);
+        return $data['id'];
+    }
+
+    public function uploadFile(UploadedFile $file, string $folderId = '0'): string
+    {
+        $folderId = ($folderId !== '' && $folderId !== '0')
+        ? $folderId
+        : env('BOX_ROOT_FOLDER_ID', '0');
+
+        $token = $this->getValidToken();
+
+        $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+            ->withToken($token)
+            ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
+            ->post('https://upload.box.com/api/2.0/files/content', [
+                'attributes' => json_encode([
+                    'name'   => $file->getClientOriginalName(),
+                    'parent' => ['id' => $folderId],
+                ]),
             ]);
 
         if ($response->failed()) {
-            throw new \Exception('Box folder creation failed: ' . $response->body());
+            throw new \Exception('Box file upload failed: ' . $response->body());
         }
 
-        return $response->json('id'); // ← This is the box_folder_id you store in DB
+        return $response->json('entries.0.id');
     }
 
-    public function uploadFile(\Illuminate\Http\UploadedFile $file, string $folderId = '0'): string
-{
-    $token = $this->getValidToken();
-
-    $response = Http::withoutVerifying()
-        ->withToken($token)
-        ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
-        ->post('https://upload.box.com/api/2.0/files/content', [
-            'attributes' => json_encode([
-                'name'   => $file->getClientOriginalName(),
-                'parent' => ['id' => $folderId],
-            ]),
-        ]);
-
-    if ($response->failed()) {
-        throw new \Exception('Box file upload failed: ' . $response->body());
-    }
-
-    return $response->json('entries.0.id');
-}
-
-public function deleteFile(string $fileId): void
-{
-    $token    = $this->getValidToken();
-    $response = Http::withoutVerifying()
-        ->withToken($token)
-        ->delete("https://api.box.com/2.0/files/{$fileId}");
-
-    if ($response->failed()) {
-        throw new \Exception('Box file deletion failed: ' . $response->body());
+    public function deleteFile(string $fileId): void
+    {
+        $client = $this->getClient();
+        $client->delete("files/{$fileId}");
     }
 }
+
+if (!function_exists('base64url_encode')) {
+    function base64url_encode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
 }

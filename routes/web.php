@@ -48,6 +48,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BoxController;
+use App\Http\Controllers\BoxProxyController;
+use App\Http\Controllers\BoxTokenController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\RecordsController;
@@ -70,8 +72,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // ── Box OAuth + raw Box file browser ──────────────────────────────────
-    Route::get('/box/connect',           [BoxController::class, 'redirect'])->name('box.connect');
-    Route::get('/box/callback',          [BoxController::class, 'callback'])->name('box.callback');
+    // Route::get('/box/connect',           [BoxController::class, 'redirect'])->name('box.connect');
+    // Route::get('/box/callback',          [BoxController::class, 'callback'])->name('box.callback');
     Route::get('/box/files',             [BoxController::class, 'files'])->name('box.files');
     Route::get('/box/download/{fileId}', [BoxController::class, 'download'])->name('box.download');
 
@@ -79,9 +81,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/folders',         [FolderController::class, 'index'])->name('folders.index');
     Route::get('/folders/{folder}',[FolderController::class, 'show'])->name('folders.show');
     Route::post('/folders', [FolderController::class, 'store'])->name('folders.store');
-
-    // Route::get('/files', [FileController::class, 'index'])
-    //     ->name('files.index');
+    
+    Route::any('box-proxy/{path}', [BoxProxyController::class, 'proxy'])
+    ->where('path', '.*');
  
     Route::post('/files', [FileController::class, 'store'])
         ->name('files.store');
@@ -89,6 +91,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('files.show');
     Route::delete('/files/{file}', [FileController::class, 'destroy'])
         ->name('files.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/box/file-token/{fileId}', [BoxTokenController::class, 'show'])
+        ->middleware('throttle:30,1');
 });
 
 Route::middleware(['auth'])->group(function () {

@@ -16,7 +16,7 @@ const AppBreadCrumb = ({ current, breadcrumbs, currentFolder, onNavigate }) => {
                         onClick={() => onNavigate(null)}
                         style={{ cursor: "pointer" }}
                     >
-                        {current}
+                        <h1 className="text-black text-lg">{current}</h1>
                     </BreadcrumbLink>
                 </BreadcrumbItem>
 

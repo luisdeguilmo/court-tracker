@@ -19,10 +19,6 @@ class FolderController extends Controller
   
     public function index(Request $request): Response|RedirectResponse
 {
-    if (!BoxToken::where('user_id', Auth::id())->exists()) {
-        return redirect()->route('box.connect');
-    }
-
     $folderId = $request->folder_id;
 
     // ── Inside a folder ──────────────────────────────────────────────────
@@ -44,7 +40,7 @@ class FolderController extends Controller
 
         // Subfolders of this folder
         $subfolders = Folder::with(['folderType'])
-            ->withCount('files')
+            ->withCount(['files', 'subfolders'])
             ->where('user_id', Auth::id())
             ->where('parent_id', $currentFolder->id)
             ->latest()
@@ -56,6 +52,7 @@ class FolderController extends Controller
                 'case_title'  => $f->case_title,
                 'folder_type' => $f->folderType?->only('id', 'name'),
                 'files_count' => $f->files_count,
+                'subfolders_count' => $f->subfolders_count,
             ]);
 
         // Files in this folder (+ live Box metadata)
@@ -107,7 +104,7 @@ class FolderController extends Controller
 
     // ── Root level ───────────────────────────────────────────────────────
     $folders = Folder::with(['folderType'])
-        ->withCount('files')
+        ->withCount(['files', 'subfolders'])
         ->where('user_id', Auth::id())
         ->whereNull('parent_id')
         ->when(
@@ -127,6 +124,11 @@ class FolderController extends Controller
             'case_status' => $folder->case_status,
             'folder_type' => $folder->folderType?->only('id', 'name'),
             'files_count' => $folder->files_count,
+            'subfolders_count' => $folder->subfolders_count,
+            'folder_type' => $folder->folderType?->only('id', 'name'),
+            'owner'       => $folder->user->name,
+            'created_at'       => $folder->created_at,
+            'updated_at'       => $folder->updated_at,
         ]);
 
     return Inertia::render('Folders/Index', [
@@ -155,10 +157,6 @@ class FolderController extends Controller
         ]);
         $current = $current->parent;
     }
-
-        if (!BoxToken::where('user_id', Auth::id())->exists()) {
-            return redirect()->route('box.connect');
-        }
  
         $folder->load(['folderType', 'user', 'files.uploadedBy']);
  
@@ -199,6 +197,7 @@ class FolderController extends Controller
         'case_number' => $sub->case_number,
         'folder_type' => $sub->folderType?->only('id', 'name'),
         'files_count' => $sub->files()->count(),
+        'folders_count' => $folder->subfolders()->count(),
     ]);
 
     return Inertia::render('Folders/Show', [
@@ -223,14 +222,14 @@ class FolderController extends Controller
 
     public function store(StoreFolderRequest $request): RedirectResponse
     {
-        // Redirect if not connected to Box
-        if (!BoxToken::where('user_id', Auth::id())->exists()) {
-            return redirect()->route('box.connect');
-        }
-
         // 1. Create the folder in Box and capture the Box folder ID
-        $boxParentId  = $request->input('box_parent_id', '0'); // '0' = Box root
+        // $boxParentId  = $request->input('box_parent_id', '0'); // '0' = Box root
+        $boxParentId = $request->parent_id
+            ? Folder::find($request->parent_id)?->box_folder_id
+            : null;
+        $boxParentId ??= env('BOX_ROOT_FOLDER_ID', '0');
         $boxFolderId  = $this->box->createFolder($request->name, $boxParentId);
+        
 
         // 2. Persist to your local database, storing the Box folder ID
         $folder = Folder::create([
@@ -243,10 +242,6 @@ class FolderController extends Controller
             'folder_type_id' => 2,
             'box_folder_id'  => $boxFolderId, // ← Returned from Box API
         ]);
-
-        // return redirect()
-        //     ->route('folders.show', $folder)
-        //     ->with('success', 'Folder created successfully.');
 
         return redirect()->back();
     }
