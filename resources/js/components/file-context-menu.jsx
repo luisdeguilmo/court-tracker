@@ -7,13 +7,19 @@ import {
     ContextMenuShortcut,
     ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Download, PenLine, Trash2, UserPlus } from "lucide-react";
+import { Download, Eye, PenLine, Trash2, UserPlus } from "lucide-react";
 
-export function FileContextMenu({ children }) {
+export function FileContextMenu({ children, onClick }) {
     return (
         <ContextMenu>
             <ContextMenuTrigger>{children}</ContextMenuTrigger>
             <ContextMenuContent>
+                <ContextMenuItem onClick={onClick}>
+                    <Eye className="w-5 h-5" />
+                    Preview
+                    {/* <ContextMenuShortcut>⌘[</ContextMenuShortcut> */}
+                </ContextMenuItem>
+                <ContextMenuSeparator />
                 <ContextMenuGroup>
                     <ContextMenuItem>
                         <Download className="w-5 h-5" />

@@ -4,24 +4,26 @@ import {
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
     Download,
     EllipsisVertical,
+    Eye,
     PenLine,
     Trash2,
     UserPlus,
 } from "lucide-react";
 import { Separator } from "./ui/separator";
 
-export function FileMenuDropdown({ file, selectedFile }) {
+export function FileMenuDropdown({ file, selectedFile, onClick }) {
     return (
         <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button
-                        className={`-mr-2 p-2 rounded-full outline-none border-none focus:ring-0 hover:bg-gray-200 ${selectedFile && selectedFile?.id === file?.id && "bg-gray-100"}`}
+                        className={`-mr-[7.8px] mb-1.5 p-2 rounded-full outline-none border-none focus:ring-0 hover:bg-gray-200 ${selectedFile && selectedFile?.id === file?.id && "bg-gray-100"}`}
                     >
                         <EllipsisVertical className="w-4 h-4 text-gray-700" />
                     </button>
@@ -29,6 +31,14 @@ export function FileMenuDropdown({ file, selectedFile }) {
                 <DropdownMenuContent>
                     <DropdownMenuGroup>
                         {/* {can("upload documents", auth) && ( */}
+                        <DropdownMenuItem
+                            onClick={onClick}
+                            className="flex items-center gap-3"
+                        >
+                            <Eye className="w-5 h-5" />
+                            Preview
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <>
                             <DropdownMenuItem className="flex items-center gap-3">
                                 <Download className="w-5 h-5" />

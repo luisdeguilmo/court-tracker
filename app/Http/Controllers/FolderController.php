@@ -82,6 +82,8 @@ class FolderController extends Controller
                 'download_url'    => $file->is_sealed
                     ? null
                     : route('box.download', $file->box_file_id),
+                'owner'       => $file->user->name,
+                'updated_at'       => $file->updated_at,
             ];
         });
 

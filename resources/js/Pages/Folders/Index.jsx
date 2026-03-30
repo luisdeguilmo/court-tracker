@@ -79,26 +79,22 @@ export default function FoldersIndex({
                 !containerRef.current.contains(e.target)
             ) {
                 setSelectedFolder(null);
+                setSelectedFile(null);
             }
         };
 
-        if (selectedFolder) {
+        if (selectedFolder || selectedFile) {
             document.addEventListener("mousedown", handleClickOutside);
         }
 
         return () =>
             document.removeEventListener("mousedown", handleClickOutside);
-    }, [selectedFolder]);
-
-    function handleHeaderClick(e) {
-        if (e.target === e.currentTarget) {
-            setSelectedFolder(null);
-        }
-    }
+    }, [selectedFolder, selectedFile]);
 
     function handleBodyClick(e) {
         if (e.target === e.currentTarget) {
             setSelectedFolder(null);
+            setSelectedFile(null);
         }
     }
 
@@ -117,7 +113,17 @@ export default function FoldersIndex({
     }
 
     function handleFolderClick(folder) {
+        if (selectedFile) {
+            setSelectedFile(null);
+        }
         setSelectedFolder(folder);
+    }
+
+    function handleFileClick(file) {
+        if (selectedFolder) {
+            setSelectedFolder(null);
+        }
+        setSelectedFile(file);
     }
 
     function handleFolderDoubleClick(folder) {
@@ -128,6 +134,8 @@ export default function FoldersIndex({
             { preserveState: false },
         );
     }
+
+    function handleFileDoubleClick(folder) {}
 
     function handleNavigate(crumb) {
         if (!crumb) {
@@ -177,7 +185,7 @@ export default function FoldersIndex({
                         <span>
                             <AppDropdown parentId={currentFolder?.id} />
                         </span>
-                        {!selectedFolder ? (
+                        {!selectedFolder && !selectedFile ? (
                             <>
                                 <form
                                     onSubmit={handleSearch}
@@ -220,9 +228,10 @@ export default function FoldersIndex({
                                 <div className="flex items-center gap-6">
                                     <div className="flex items-center gap-4">
                                         <button
-                                            onClick={() =>
-                                                setSelectedFolder(null)
-                                            }
+                                            onClick={() => {
+                                                setSelectedFolder(null);
+                                                setSelectedFile(null);
+                                            }}
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -381,7 +390,13 @@ export default function FoldersIndex({
                                         <FileCard
                                             key={file.id}
                                             file={file}
-                                            accessToken="7E2n5IGgPp7IB3QAAI3cNMh7IcnmpL3F"
+                                            selectedFile={selectedFile}
+                                            onClick={() =>
+                                                handleFileClick(file)
+                                            }
+                                            onDoubleClick={() =>
+                                                handleFileDoubleClick(file)
+                                            }
                                         />
                                     ))}
                                 </div>
@@ -395,9 +410,14 @@ export default function FoldersIndex({
                     </div>
 
                     {detailsOpen && (
-                        <div className="w-72 shrink-0 border-l overflow-y-scroll h-116.25 border-gray-200 p-4">
+                        <div className="w-80 shrink-0 border-l overflow-y-scroll h-116.25 border-gray-200 p-4">
                             <FileDetailsPanel
-                                folder={selectedFolder}
+                                item={
+                                    selectedFolder
+                                        ? selectedFolder
+                                        : selectedFile
+                                }
+                                isFolder={selectedFolder ? true : false}
                                 onClose={setDetailsOpen}
                             />
                         </div>

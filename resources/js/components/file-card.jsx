@@ -2001,6 +2001,8 @@ import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { renderAsync } from "docx-preview";
 import ExcelJS from "exceljs";
 import { createPortal } from "react-dom";
+import FileContextMenu from "./file-context-menu";
+import FileMenuDropdown from "./file-menu-dropdown";
 // import { X } from "lucide-react";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
@@ -2972,13 +2974,13 @@ function FileCard({ file, selectedFile, onClick, onDoubleClick }) {
     // accessToken prop removed
     const [previewOpen, setPreviewOpen] = useState(false);
 
-    // const handleCardClick = () => {
-    //     if (!file.box_file_id || file.is_sealed) return;
-    //     setPreviewOpen(true);
-    // };
+    const handleCardClick = () => {
+        if (!file.box_file_id || file.is_sealed) return;
+        setPreviewOpen(true);
+    };
 
     return (
-        <>
+        <FileContextMenu onClick={handleCardClick}>
             <Card
                 onClick={onClick}
                 onDoubleClick={onDoubleClick}
@@ -2986,7 +2988,10 @@ function FileCard({ file, selectedFile, onClick, onDoubleClick }) {
             >
                 <div className="flex items-center justify-between">
                     <div className="w-[80%]">
-                        <h3 title={file.name} className="font-medium text-gray-800 text-sm line-clamp-1">
+                        <h3
+                            title={file.name}
+                            className="font-medium text-gray-800 text-sm line-clamp-1"
+                        >
                             {file.name}
                         </h3>
                         <p className="text-xs text-gray-400 mb-1">
@@ -3002,9 +3007,14 @@ function FileCard({ file, selectedFile, onClick, onDoubleClick }) {
                         </p>
                     </div>
 
-                    <button className="mb-1">
+                    {/* <button className="mb-1">
                         <EllipsisVertical className="w-4 h-4" />
-                    </button>
+                    </button> */}
+                    <FileMenuDropdown
+                        file={file}
+                        selectedFile={selectedFile}
+                        onClick={handleCardClick}
+                    />
                 </div>
                 <CardContent className="">
                     <div className="w-full bg-gray-100 aspect-square flex items-center justify-center overflow-hidden">
@@ -3019,7 +3029,7 @@ function FileCard({ file, selectedFile, onClick, onDoubleClick }) {
                     onClose={() => setPreviewOpen(false)}
                 />
             )}
-        </>
+        </FileContextMenu>
     );
 }
 

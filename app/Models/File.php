@@ -16,6 +16,11 @@ class File extends Model
     ];
  
     protected $casts = ['is_sealed' => 'boolean'];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
  
     public function folder(): BelongsTo
     {

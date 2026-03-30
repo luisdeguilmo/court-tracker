@@ -21,9 +21,9 @@ class FileController extends Controller
     {
         abort_if($file->folder->user_id !== Auth::id(), 403);
  
-        if (!BoxToken::where('user_id', Auth::id())->exists()) {
-            return redirect()->route('box.connect');
-        }
+        // if (!BoxToken::where('user_id', Auth::id())->exists()) {
+        //     return redirect()->route('box.connect');
+        // }
  
         $file->load(['folder.folderType', 'uploadedBy']);
  
