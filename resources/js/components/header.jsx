@@ -15,7 +15,7 @@ const Header = () => {
         <header className="relative">
             <nav className={`bg-white border-b px-4 py-2.5 flex  items-center`}>
                 <SidebarTrigger />
-                <SearchBar />
+                <SearchBar className={"ml-3.5"} />
 
                 <div className="relative ml-auto">
                     <div className="flex justify-between">

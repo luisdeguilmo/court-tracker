@@ -14,16 +14,18 @@ class StoreFileRequest extends FormRequest
     public function authorize(): bool
     {
      
-         $folderId = $this->input('folder_id');
+        //  $folderId = $this->input('folder_id');
  
-        if ($folderId) {
-            return Folder::where('id', $folderId)
-                ->where('user_id', Auth::id())
-                ->exists();
-        }
+        // if ($folderId) {
+        //     return Folder::where('id', $folderId)
+        //         ->where('user_id', Auth::id())
+        //         ->exists();
+        // }
  
-        // Root-level upload — just needs to be authenticated
-        return Auth::check();
+        // // Root-level upload — just needs to be authenticated
+        // return Auth::check();
+
+        return true;
     }
 
     /**

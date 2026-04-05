@@ -146,20 +146,90 @@ class BoxService
         return $data['id'];
     }
 
-    public function uploadFile(UploadedFile $file, string $folderId = '0'): string
+    public function fileExistsInBox(string $folderId, string $fileName): bool
     {
-        $folderId = ($folderId !== '' && $folderId !== '0')
-        ? $folderId
-        : env('BOX_ROOT_FOLDER_ID', '0');
-
         $token = $this->getValidToken();
 
         $response = \Illuminate\Support\Facades\Http::withoutVerifying()
             ->withToken($token)
-            ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
+            ->get("https://api.box.com/2.0/folders/{$folderId}/items", [
+                'fields' => 'name',
+                'limit'  => 1000,
+            ]);
+
+        if ($response->failed()) {
+            throw new \Exception('Box API error: ' . $response->body());
+        }
+
+        $items = $response->json('entries') ?? [];
+
+        foreach ($items as $item) {
+            if ($item['name'] === $fileName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function generateUniqueFileName(string $folderId, string $fileName): string
+    {
+        $nameWithoutExt = pathinfo($fileName, PATHINFO_FILENAME);
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+
+        $newName = $fileName;
+        $counter = 1;
+
+        while ($this->fileExistsInBox($folderId, $newName)) {
+            $newName = $nameWithoutExt . " ($counter)." . $extension;
+            $counter++;
+        }
+
+        return $newName;
+    }
+
+    // public function uploadFile(UploadedFile $file, string $folderId = '0'): string
+    // {
+    //     $folderId = ($folderId !== '' && $folderId !== '0')
+    //     ? $folderId
+    //     : env('BOX_ROOT_FOLDER_ID', '0');
+
+    //     $token = $this->getValidToken();
+
+    //     $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+    //         ->withToken($token)
+    //         ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
+    //         ->post('https://upload.box.com/api/2.0/files/content', [
+    //             'attributes' => json_encode([
+    //                 'name'   => $file->getClientOriginalName(),
+    //                 'parent' => ['id' => $folderId],
+    //             ]),
+    //         ]);
+
+    //     if ($response->failed()) {
+    //         throw new \Exception('Box file upload failed: ' . $response->body());
+    //     }
+
+    //     return $response->json('entries.0.id');
+    // }
+
+    public function uploadFile(UploadedFile $file, string $folderId = '0', ?string $fileName = null): string
+    {
+        $folderId = ($folderId !== '' && $folderId !== '0')
+            ? $folderId
+            : env('BOX_ROOT_FOLDER_ID', '0');
+
+        $token = $this->getValidToken();
+
+        // ✅ Use provided filename OR fallback to original
+        $finalName = $fileName ?? $file->getClientOriginalName();
+
+        $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+            ->withToken($token)
+            ->attach('file', file_get_contents($file->getRealPath()), $finalName)
             ->post('https://upload.box.com/api/2.0/files/content', [
                 'attributes' => json_encode([
-                    'name'   => $file->getClientOriginalName(),
+                    'name'   => $finalName,
                     'parent' => ['id' => $folderId],
                 ]),
             ]);

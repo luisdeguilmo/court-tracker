@@ -23,7 +23,7 @@ export function FileMenuDropdown({ file, selectedFile, onClick }) {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button
-                        className={`-mr-[7.8px] mb-1.5 p-2 rounded-full outline-none border-none focus:ring-0 hover:bg-gray-200 ${selectedFile && selectedFile?.id === file?.id && "bg-gray-100"}`}
+                        className={`-mr-[7.8px] p-2 rounded-full outline-none border-none focus:ring-0 hover:bg-gray-200 ${selectedFile && selectedFile?.id === file?.id && "bg-gray-100"}`}
                     >
                         <EllipsisVertical className="w-4 h-4 text-gray-700" />
                     </button>

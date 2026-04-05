@@ -17,33 +17,34 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "./ui/sidebar";
+import { Link } from "@inertiajs/react";
 
 const menu_items = [
     {
         title: "Dashboard",
-        url: "/dashboard",
+        link: "dashboard",
         icon: LayoutDashboard,
     },
     {
         title: "Records",
-        url: "/records",
+        link: "records.index",
         icon: Folder,
     },
     {
         title: "My Drive",
-        url: "/folders",
+        link: "folders.index",
         icon: BookText,
     },
     {
-        title: "Shared with me",
-        url: "/settings",
+        title: "Users",
+        link: "users.index",
         icon: Users,
     },
-    {
-        title: "Trash",
-        url: "/settings",
-        icon: Trash2,
-    },
+    // {
+    //     title: "Trash",
+    //     link: "settings",
+    //     icon: Trash2,
+    // },
 ];
 
 const AppSideBar = () => {
@@ -62,15 +63,15 @@ const AppSideBar = () => {
                                 className={`p-4 text-gray-900 hover:bg-gray-100 ${path === item.url && "bg-gray-100"}`}
                                 asChild
                             >
-                                <a
-                                    href={item.url}
+                                <Link
+                                    href={route(item.link)}
                                     className="flex items-center gap-2"
                                 >
                                     <item.icon className="w-4 h-4" />
                                     <span>
                                         {item.title}
                                     </span>
-                                </a>
+                                </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}

@@ -29,6 +29,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import FileCard from "@/components/file-card";
 import FolderMenuDropdown from "@/components/folder-menu-dropdown";
 import FolderContextMenu from "@/components/folder-context-menu";
+import FileMenuDropdown from "@/components/file-menu-dropdown";
+import FileIcon from "@/components/file-icon";
 
 const STATUS_PILL = {
     open: "bg-emerald-100 text-emerald-700",
@@ -50,11 +52,6 @@ const EXT_ICON = {
     avi: Film,
 };
 
-function FileIcon({ extension, size = 15 }) {
-    const Icon = EXT_ICON[extension?.toLowerCase()] ?? File;
-    return <Icon size={size} />;
-}
-
 export default function FoldersIndex({
     folders,
     subfolders,
@@ -71,6 +68,11 @@ export default function FoldersIndex({
     const containerRef = useRef(null);
 
     const isRoot = !currentFolder;
+
+    const displayFolders = isRoot ? (folders?.data ?? []) : (subfolders ?? []);
+    const items = [...displayFolders, ...files];
+
+    console.log(items);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -149,8 +151,6 @@ export default function FoldersIndex({
         }
     }
 
-    const displayFolders = isRoot ? (folders?.data ?? []) : (subfolders ?? []);
-
     return (
         <div ref={containerRef}>
             <Head title={currentFolder ? currentFolder.name : "Folders"} />
@@ -224,7 +224,7 @@ export default function FoldersIndex({
                                 </form>
                             </>
                         ) : (
-                            <div className="w-full py-2 px-4 rounded-lg text-gray-700 bg-gray-100 flex items-center justify-between">
+                            <div className="w-full py-1 px-4 rounded-lg text-gray-700 bg-gray-100 flex items-center justify-between">
                                 <div className="flex items-center gap-6">
                                     <div className="flex items-center gap-4">
                                         <button
@@ -251,9 +251,17 @@ export default function FoldersIndex({
                                     <button>
                                         <Trash2 className="w-4 h-4" />
                                     </button>
-                                    <button>
-                                        <EllipsisVertical className="w-4 h-4" />
-                                    </button>
+                                    {selectedFolder ? (
+                                        <FolderMenuDropdown
+                                            folder={selectedFolder}
+                                            selectedFolder={selectedFolder}
+                                        />
+                                    ) : (
+                                        <FileMenuDropdown
+                                            file={selectedFile}
+                                            selectedFile={selectedFile}
+                                        />
+                                    )}
                                 </div>
                                 <button
                                     onClick={() => setDetailsOpen(!detailsOpen)}
@@ -276,8 +284,8 @@ export default function FoldersIndex({
                         className={`w-full mx-auto py-6 space-y-8 overflow-y-scroll h-130.5 ${selectedFolder && ""}`}
                         onClick={handleBodyClick}
                     >
-                        {/* Subfolders grid */}
-                        {displayFolders.length > 0 && (
+                        {/* {displayFolders.length > 0 && ( */}
+                        <>
                             <section>
                                 {!isRoot && (
                                     <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
@@ -326,31 +334,71 @@ export default function FoldersIndex({
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-50">
-                                                    {displayFolders.map(
-                                                        (folder) => (
-                                                            <FolderRow
-                                                                key={folder.id}
-                                                                onClick={() =>
-                                                                    handleFolderClick(
-                                                                        folder,
-                                                                    )
-                                                                }
-                                                                onDoubleClick={() =>
-                                                                    handleFolderDoubleClick(
-                                                                        folder,
-                                                                    )
-                                                                }
-                                                                folder={folder}
-                                                            />
-                                                        ),
-                                                    )}
+                                                    {items.map((item) => (
+                                                        <FolderRow
+                                                            key={item.id}
+                                                            onClick={() => {
+                                                                item.folder_type
+                                                                    ?.id
+                                                                    ? handleFolderClick(
+                                                                          item,
+                                                                      )
+                                                                    : handleFileClick(
+                                                                          item,
+                                                                      );
+                                                            }}
+                                                            onDoubleClick={() => {
+                                                                item.folder_type
+                                                                    ?.id
+                                                                    ? handleFolderDoubleClick(
+                                                                          item,
+                                                                      )
+                                                                    : handleFileDoubleClick(
+                                                                          item,
+                                                                      );
+                                                            }}
+                                                            item={item}
+                                                            selectedFile={
+                                                                selectedFile
+                                                            }
+                                                            selectedFolder={
+                                                                selectedFolder
+                                                            }
+                                                        />
+                                                    ))}
                                                 </tbody>
                                             </table>
                                         </div>
                                     </div>
                                 )}
                             </section>
-                        )}
+                            {isRoot && layout === "grid" && (
+                                <section>
+                                    <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                                        Files{" "}
+                                        <span className="text-gray-400 font-normal normal-case">
+                                            ({files?.length ?? 0})
+                                        </span>
+                                    </h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                        {files.map((file) => (
+                                            <FileCard
+                                                key={file.id}
+                                                file={file}
+                                                selectedFile={selectedFile}
+                                                onClick={() =>
+                                                    handleFileClick(file)
+                                                }
+                                                onDoubleClick={() =>
+                                                    handleFileDoubleClick(file)
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+                        </>
+                        {/* )} */}
 
                         {/* Empty root */}
                         {isRoot && displayFolders.length === 0 && (
@@ -377,7 +425,7 @@ export default function FoldersIndex({
                         )}
 
                         {/* Files — only inside a folder */}
-                        {!isRoot && (
+                        {!isRoot && layout === "grid" && (
                             <section>
                                 <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
                                     Files{" "}
@@ -444,7 +492,7 @@ function FolderCard({ folder, selectedFolder, onClick, onDoubleClick }) {
                             <div>
                                 <Folder
                                     className="w-6 h-6 text-transparent"
-                                    fill="gray"
+                                    fill={folder.color}
                                 />
                             </div>
                             <p className="text-ellipsis text-sm text-nowrap overflow-hidden">
@@ -467,38 +515,68 @@ function FolderCard({ folder, selectedFolder, onClick, onDoubleClick }) {
     );
 }
 
-function FolderRow({ folder, onClick, onDoubleClick }) {
+function FolderRow({
+    item,
+    onClick,
+    onDoubleClick,
+    selectedFile,
+    selectedFolder,
+}) {
+    console.log(item);
     return (
         <tr
             onDoubleClick={onDoubleClick}
             onClick={onClick}
-            className="hover:bg-gray-50 transition border-b border-gray-200"
+            className={`${selectedFile ? selectedFile?.id === item.id && "bg-gray-100" : selectedFolder?.id === item.id && "bg-gray-100"} hover:bg-gray-50 transition border-b border-gray-200`}
         >
             <td className="px-5 py-3.5">
-                <div className="flex items-center gap-3">
-                    <p className="text-gray-800 ">
+                <div className="flex items-center gap-4">
+                    <div>
+                        {item.folder_type?.id ? (
+                            <Folder
+                                className="w-6 h-6 text-transparent"
+                                fill={item?.color}
+                            />
+                        ) : (
+                            <FileIcon extension={item?.extension} alt="dsd" />
+                        )}
+                    </div>
+                    <p className="text-gray-700 font-semibold">
                         {" "}
-                        {folder.folder_type?.id === 1
-                            ? folder.name
-                            : (folder.case_title ?? folder.name)}
+                        {item.folder_type?.id
+                            ? item.folder_type?.id === 1
+                                ? item.name
+                                : (item.case_title ?? item.name)
+                            : item.name}
                     </p>
                 </div>
             </td>
-            <td className="px-4 py-3.5 text-gray-500  ">{folder.owner}</td>
-            <td className="px-4 py-3.5 text-gray-500  ">--</td>
+            <td className="px-4 py-3.5 text-gray-500  ">{item.owner}</td>
+            <td className="px-4 py-3.5 text-gray-500  ">{item?.size_human}</td>
             <td className="px-4 py-3.5 text-gray-400 text-xs  ">
-                {folder.created_at
-                    ? new Date(folder.created_at).toLocaleDateString(
-                          undefined,
-                          {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                          },
-                      )
+                {item.created_at
+                    ? new Date(item.created_at).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                      })
                     : "—"}
             </td>
-            <td className="py-3.5 pr-10 text-gray-500 text-right">--</td>
+            <td className="text-gray-500 text-right">
+                <div className="w-4 h-4 ml-auto mb-3.5 mr-10 text-gray-700">
+                    {item.folder_type?.id ? (
+                        <FolderMenuDropdown
+                            folder={item}
+                            selectedFolder={selectedFolder}
+                        />
+                    ) : (
+                        <FileMenuDropdown
+                            file={item}
+                            selectedFile={selectedFile}
+                        />
+                    )}
+                </div>
+            </td>
         </tr>
     );
 }

@@ -78,34 +78,70 @@ class FileController extends Controller
         ]);
     }
  
+    // public function store(StoreFileRequest $request): RedirectResponse
+    // {
+    //     $folder = $request->folder_id
+    //         ? Folder::find($request->folder_id)
+    //         : null;
+ 
+    //     $uploadedFile = $request->file('file');
+ 
+    //     // 1. Upload to Box under the folder's Box ID, or root ('0') if none
+    //     $boxFileId = $this->box->uploadFile(
+    //         $uploadedFile,
+    //         $folder?->box_folder_id ?? env('BOX_ROOT_FOLDER_ID', '0')
+    //     );
+ 
+    //     // 2. Persist locally
+    //     File::create([
+    //         'folder_id'     => $folder?->id,
+    //         'name'          => $uploadedFile->getClientOriginalName(),
+    //         'extension'     => $uploadedFile->getClientOriginalExtension(),
+    //         'size'          => $uploadedFile->getSize(),
+    //         'document_type' => null,
+    //         'is_sealed'     => false,
+    //         'box_file_id'   => $boxFileId,
+    //         'uploaded_by'   => Auth::id(),
+    //     ]);
+ 
+    //     return redirect()->back();
+    // }
+
     public function store(StoreFileRequest $request): RedirectResponse
-    {
-        $folder = $request->folder_id
-            ? Folder::find($request->folder_id)
-            : null;
- 
-        $uploadedFile = $request->file('file');
- 
-        // 1. Upload to Box under the folder's Box ID, or root ('0') if none
-        $boxFileId = $this->box->uploadFile(
-            $uploadedFile,
-            $folder?->box_folder_id ?? env('BOX_ROOT_FOLDER_ID', '0')
-        );
- 
-        // 2. Persist locally
-        File::create([
-            'folder_id'     => $folder?->id,
-            'name'          => $uploadedFile->getClientOriginalName(),
-            'extension'     => $uploadedFile->getClientOriginalExtension(),
-            'size'          => $uploadedFile->getSize(),
-            'document_type' => null,
-            'is_sealed'     => false,
-            'box_file_id'   => $boxFileId,
-            'uploaded_by'   => Auth::id(),
-        ]);
- 
-        return redirect()->back();
-    }
+{
+    $folder = $request->folder_id
+        ? Folder::find($request->folder_id)
+        : null;
+
+    $uploadedFile = $request->file('file');
+
+    $parentBoxFolderId = $folder?->box_folder_id ?? env('BOX_ROOT_FOLDER_ID', '0');
+
+    // ✅ NEW: Generate unique filename
+    $originalName = $uploadedFile->getClientOriginalName();
+    $uniqueName = $this->box->generateUniqueFileName($parentBoxFolderId, $originalName);
+
+    // 1. Upload to Box with unique name
+    $boxFileId = $this->box->uploadFile(
+        $uploadedFile,
+        $parentBoxFolderId,
+        $uniqueName // 👈 pass renamed file
+    );
+
+    // 2. Persist locally
+    File::create([
+        'folder_id'     => $folder?->id,
+        'name'          => $uniqueName, // 👈 store final name
+        'extension'     => $uploadedFile->getClientOriginalExtension(),
+        'size'          => $uploadedFile->getSize(),
+        'document_type' => null,
+        'is_sealed'     => false,
+        'box_file_id'   => $boxFileId,
+        'uploaded_by'   => Auth::id(),
+    ]);
+
+    return redirect()->back();
+}
  
     public function destroy(File $file): RedirectResponse
     {

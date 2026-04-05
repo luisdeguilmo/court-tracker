@@ -2548,6 +2548,8 @@ function FilePreview({ file, accessToken }) {
     const ext = file.extension?.toLowerCase();
     const url = file.download_url;
 
+    console.log(file);
+
     if (file.is_sealed)
         return <FallbackIcon icon={<Lock size={20} />} label="Sealed File" />;
     if (!url)
@@ -3010,11 +3012,13 @@ function FileCard({ file, selectedFile, onClick, onDoubleClick }) {
                     {/* <button className="mb-1">
                         <EllipsisVertical className="w-4 h-4" />
                     </button> */}
-                    <FileMenuDropdown
-                        file={file}
-                        selectedFile={selectedFile}
-                        onClick={handleCardClick}
-                    />
+                    <div className="mb-2">
+                        <FileMenuDropdown
+                            file={file}
+                            selectedFile={selectedFile}
+                            onClick={handleCardClick}
+                        />
+                    </div>
                 </div>
                 <CardContent className="">
                     <div className="w-full bg-gray-100 aspect-square flex items-center justify-center overflow-hidden">

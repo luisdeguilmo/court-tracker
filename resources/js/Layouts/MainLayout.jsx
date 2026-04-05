@@ -8,8 +8,6 @@ const MainLayout = ({ children }) => {
 
     const user = usePage().props.auth.user;
 
-    console.log(user);
-
     return (
         <SidebarProvider>
             <div className="flex w-full h-screen overflow-hidden">

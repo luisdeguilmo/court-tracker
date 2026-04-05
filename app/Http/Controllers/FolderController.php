@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFolderRequest;
 use App\Models\BoxToken;
+use App\Models\File;
 use App\Models\Folder;
 use App\Services\BoxService;
 use Illuminate\Http\RedirectResponse;
@@ -51,6 +52,7 @@ class FolderController extends Controller
                 'case_number' => $f->case_number,
                 'case_title'  => $f->case_title,
                 'folder_type' => $f->folderType?->only('id', 'name'),
+                'color' => $f->color,
                 'files_count' => $f->files_count,
                 'subfolders_count' => $f->subfolders_count,
             ]);
@@ -58,34 +60,60 @@ class FolderController extends Controller
         // Files in this folder (+ live Box metadata)
         $currentFolder->load(['folderType', 'user', 'files.uploadedBy']);
 
-        $boxItems = [];
-        if ($currentFolder->box_folder_id) {
-            $boxItems = collect($this->box->getFiles($currentFolder->box_folder_id))
-                ->keyBy('id')
-                ->toArray();
-        }
+        // $boxItems = [];
+        // if ($currentFolder->box_folder_id) {
+        //     $boxItems = collect($this->box->getFiles($currentFolder->box_folder_id))
+        //         ->keyBy('id')
+        //         ->toArray();
+        // }
 
-        $files = $currentFolder->files->map(function ($file) use ($boxItems) {
-            $boxMeta = $boxItems[$file->box_file_id] ?? null;
-            return [
-                'id'              => $file->id,
-                'name'            => $file->name,
-                'extension'       => $file->extension,
-                'size'            => $file->size,
-                'size_human'      => $this->formatBytes($file->size),
-                'document_type'   => $file->document_type,
-                'is_sealed'       => $file->is_sealed,
-                'box_file_id'     => $file->box_file_id,
-                // 'uploaded_by'     => $file->uploadedBy->name,
-                'created_at'      => $file->created_at->toDateTimeString(),
-                'box_modified_at' => $boxMeta['modified_at'] ?? null,
-                'download_url'    => $file->is_sealed
-                    ? null
-                    : route('box.download', $file->box_file_id),
-                'owner'       => $file->user->name,
-                'updated_at'       => $file->updated_at,
-            ];
-        });
+        // $files = $currentFolder->files->map(function ($file) use ($boxItems) {
+        //     $boxMeta = $boxItems[$file->box_file_id] ?? null;
+        //     return [
+        //         'id'              => $file->id,
+        //         'name'            => $file->name,
+        //         'extension'       => $file->extension,
+        //         'size'            => $file->size,
+        //         'size_human'      => $this->formatBytes($file->size),
+        //         'document_type'   => $file->document_type,
+        //         'is_sealed'       => $file->is_sealed,
+        //         'box_file_id'     => $file->box_file_id,
+        //         // 'uploaded_by'     => $file->uploadedBy->name,
+        //         'created_at'      => $file->created_at->toDateTimeString(),
+        //         'box_modified_at' => $boxMeta['modified_at'] ?? null,
+        //         'download_url'    => $file->is_sealed
+        //             ? null
+        //             : route('box.download', $file->box_file_id),
+        //         'owner'       => $file->user->name,
+        //         'updated_at'       => $file->updated_at,
+        //     ];
+        // });
+
+        $files = $currentFolder->files
+            // ->where('is_public', true)
+            ->map(function ($file) {
+                $canDownload = Auth::user()->hasAnyRole(['admin', 'clerk'])
+                    || $file->uploaded_by === Auth::id();
+
+                return [
+                    'id'            => $file->id,
+                    'name'          => $file->name,
+                    'extension'     => $file->extension,
+                    'size'          => $file->size,
+                    'size_human'    => $this->formatBytes($file->size),
+                    'document_type' => $file->document_type,
+                    'is_sealed'     => $file->is_sealed,
+                    'box_file_id'   => $file->box_file_id,
+                    'uploaded_by'   => $file->uploadedBy->name,
+                    'created_at'    => $file->created_at->toDateTimeString(),
+                    // Only admins, clerks, or the uploader can download
+                    'download_url'    => $file->is_sealed
+                        ? null
+                        : route('box.download', $file->box_file_id),
+                    'owner'       => $file->user->name,
+                    'updated_at'       => $file->updated_at,
+                ];
+            });
 
         return Inertia::render('Folders/Index', [
             'currentFolder' => [
@@ -105,42 +133,105 @@ class FolderController extends Controller
     }
 
     // ── Root level ───────────────────────────────────────────────────────
-    $folders = Folder::with(['folderType'])
-        ->withCount(['files', 'subfolders'])
-        ->where('user_id', Auth::id())
-        ->whereNull('parent_id')
-        ->when(
-            $request->search,
-            fn($q, $s) => $q->where('name', 'like', "%{$s}%")
-                ->orWhere('case_number', 'like', "%{$s}%")
-                ->orWhere('case_title', 'like', "%{$s}%")
-        )
-        ->latest()
-        ->paginate(12)
-        ->withQueryString()
-        ->through(fn($folder) => [
-            'id'          => $folder->id,
-            'name'        => $folder->name,
-            'case_number' => $folder->case_number,
-            'case_title'  => $folder->case_title,
-            'case_status' => $folder->case_status,
-            'folder_type' => $folder->folderType?->only('id', 'name'),
-            'files_count' => $folder->files_count,
-            'subfolders_count' => $folder->subfolders_count,
-            'folder_type' => $folder->folderType?->only('id', 'name'),
-            'owner'       => $folder->user->name,
-            'created_at'       => $folder->created_at,
-            'updated_at'       => $folder->updated_at,
-        ]);
+    // $folders = Folder::with(['folderType'])
+    //     ->withCount(['files', 'subfolders'])
+    //     ->where('user_id', Auth::id())
+    //     ->whereNull('parent_id')
+    //     ->when(
+    //         $request->search,
+    //         fn($q, $s) => $q->where('name', 'like', "%{$s}%")
+    //             ->orWhere('case_number', 'like', "%{$s}%")
+    //             ->orWhere('case_title', 'like', "%{$s}%")
+    //     )
+    //     ->latest()
+    //     ->paginate(12)
+    //     ->withQueryString()
+    //     ->through(fn($folder) => [
+    //         'id'          => $folder->id,
+    //         'name'        => $folder->name,
+    //         'case_number' => $folder->case_number,
+    //         'case_title'  => $folder->case_title,
+    //         'case_status' => $folder->case_status,
+    //         'folder_type' => $folder->folderType?->only('id', 'name'),
+    //         'files_count' => $folder->files_count,
+    //         'subfolders_count' => $folder->subfolders_count,
+    //         'folder_type' => $folder->folderType?->only('id', 'name'),
+    //         'owner'       => $folder->user->name,
+    //         'created_at'       => $folder->created_at,
+    //         'updated_at'       => $folder->updated_at,
+    //     ]);
 
-    return Inertia::render('Folders/Index', [
-        'folders'       => $folders,
-        'currentFolder' => null,
-        'breadcrumbs'   => [],
-        'subfolders'    => null,
-        'files'         => null,
-        'filters'       => $request->only(['search']),
+    // return Inertia::render('Folders/Index', [
+    //     'folders'       => $folders,
+    //     'currentFolder' => null,
+    //     'breadcrumbs'   => [],
+    //     'subfolders'    => null,
+    //     'files'         => null,
+    //     'filters'       => $request->only(['search']),
+    // ]);
+
+    // ── Root level ───────────────────────────────────────────────────────
+$folders = Folder::with(['folderType', 'user'])
+    ->withCount(['files', 'subfolders'])
+    ->where('user_id', Auth::id())
+    ->whereNull('parent_id')
+    ->when(
+        $request->search,
+        fn($q, $s) => $q->where('name', 'like', "%{$s}%")
+            ->orWhere('case_number', 'like', "%{$s}%")
+            ->orWhere('case_title', 'like', "%{$s}%")
+    )
+    ->latest()
+    ->paginate(12)
+    ->withQueryString()
+    ->through(fn($folder) => [
+        'id'              => $folder->id,
+        'name'            => $folder->name,
+        'case_number'     => $folder->case_number,
+        'case_title'      => $folder->case_title,
+        'case_status'     => $folder->case_status,
+        'color'     => $folder->color,
+        'folder_type'     => $folder->folderType?->only('id', 'name'),
+        'files_count'     => $folder->files_count,
+        'subfolders_count' => $folder->subfolders_count,
+        'owner'           => $folder->user->name,
+        'created_at'      => $folder->created_at,
+        'updated_at'      => $folder->updated_at,
     ]);
+
+// Fetch root-level files (no folder association)
+$rootFiles = File::with(['uploadedBy', 'user'])
+    ->where('uploaded_by', Auth::id())
+    ->whereNull('folder_id')
+    ->latest()
+    ->get()
+    ->map(function ($file) {
+        return [
+            'id'            => $file->id,
+            'name'          => $file->name,
+            'extension'     => $file->extension,
+            'size'          => $file->size,
+            'size_human'    => $this->formatBytes($file->size),
+            'document_type' => $file->document_type,
+            'is_sealed'     => $file->is_sealed,
+            'box_file_id'   => $file->box_file_id,
+            'created_at'    => $file->created_at->toDateTimeString(),
+            'download_url'  => $file->is_sealed
+                ? null
+                : route('box.download', $file->box_file_id),
+            'owner'         => $file->user->name,
+            'updated_at'    => $file->updated_at,
+        ];
+    });
+
+return Inertia::render('Folders/Index', [
+    'folders'       => $folders,
+    'currentFolder' => null,
+    'breadcrumbs'   => [],
+    'subfolders'    => null,
+    'files'         => $rootFiles,  // <-- now populated
+    'filters'       => $request->only(['search']),
+]);
 }
  
     public function show(Folder $folder): Response|RedirectResponse

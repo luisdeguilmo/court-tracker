@@ -53,6 +53,7 @@ use App\Http\Controllers\BoxTokenController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\RecordsController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -81,6 +82,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/folders',         [FolderController::class, 'index'])->name('folders.index');
     Route::get('/folders/{folder}',[FolderController::class, 'show'])->name('folders.show');
     Route::post('/folders', [FolderController::class, 'store'])->name('folders.store');
+
+    Route::get('/records', [RecordsController::class, 'index'])->name('records.index');
+    Route::get('/records/{folder}',[FolderController::class, 'show'])->name('records.show');
+    Route::post('/records', [RecordsController::class, 'store'])->name('records.store');
+
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
     
     Route::any('box-proxy/{path}', [BoxProxyController::class, 'proxy'])
     ->where('path', '.*');
@@ -98,10 +106,10 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('throttle:30,1');
 });
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/records', [RecordsController::class, 'index'])->name('records.index');
-    Route::post('/records', [RecordsController::class, 'store'])->name('records.store');
-});
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('/records', [RecordsController::class, 'index'])->name('records.index');
+//     Route::post('/records', [RecordsController::class, 'store'])->name('records.store');
+// });
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');

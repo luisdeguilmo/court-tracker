@@ -24,7 +24,7 @@ class RecordsController extends Controller
 
         if ($folderId) {
             $currentFolder = Folder::where('id', $folderId)
-                ->where('is_public', true)
+                ->where('folder_scope', 'record')
                 ->firstOrFail();
 
             // Breadcrumbs
@@ -42,7 +42,7 @@ class RecordsController extends Controller
             $subfolders = Folder::with(['folderType'])
                 ->withCount('files')
                 ->where('parent_id', $currentFolder->id)
-                ->where('is_public', true)
+                ->where('folder_scope', 'record')
                 ->latest()
                 ->get()
                 ->map(fn($f) => [
@@ -58,7 +58,7 @@ class RecordsController extends Controller
             $currentFolder->load(['folderType', 'files.uploadedBy']);
 
             $files = $currentFolder->files
-                ->where('is_public', true)
+                // ->where('is_public', true)
                 ->map(function ($file) {
                     $canDownload = Auth::user()->hasAnyRole(['admin', 'clerk'])
                         || $file->uploaded_by === Auth::id();
@@ -75,9 +75,11 @@ class RecordsController extends Controller
                         'uploaded_by'   => $file->uploadedBy->name,
                         'created_at'    => $file->created_at->toDateTimeString(),
                         // Only admins, clerks, or the uploader can download
-                        'download_url'  => ($canDownload && !$file->is_sealed)
-                            ? route('box.download', $file->box_file_id)
-                            : null,
+                        'download_url'    => $file->is_sealed
+                            ? null
+                            : route('box.download', $file->box_file_id),
+                        'owner'       => $file->user->name,
+                        'updated_at'       => $file->updated_at,
                     ];
                 });
 
@@ -105,7 +107,7 @@ class RecordsController extends Controller
         $folders = Folder::with(['folderType'])
             ->withCount('files')
             ->whereNull('parent_id')
-            ->where('is_public', true)
+            ->where('folder_scope', 'record')
             ->when(
                 $request->search,
                 fn($q, $s) => $q->where('name', 'like', "%{$s}%")
@@ -121,6 +123,7 @@ class RecordsController extends Controller
                 'case_number' => $folder->case_number,
                 'case_title'  => $folder->case_title,
                 'case_status' => $folder->case_status,
+                'color' => $folder->color,
                 'folder_type' => $folder->folderType?->only('id', 'name'),
                 'files_count' => $folder->files_count,
             ]);
